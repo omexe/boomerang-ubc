@@ -13,6 +13,12 @@ const GARDENERS = 12;
 const EARLY_GARDENERS = Math.round((GARDENERS * EARLY_COUNT) / PILGRIMS); // 7
 const G_H = 38; // gardener height in island-image pixels
 const G_W = G_H * (53 / 67);
+const U = G_H / 67; // one sprite pixel, in island-image pixels
+// sprite regions (in sprite pixels) for the simple walk rig
+const BODY = { x: 0, y: 0, w: 53, h: 58 };
+const LEG_L = { x: 16, y: 58, w: 12, h: 9 };
+const LEG_R = { x: 28, y: 58, w: 12, h: 9 };
+const STRIDE = 7; // island-image pixels per half step
 
 // Walkable spots on the island image (paths, lawns, meadow), in image pixels.
 const SPOTS: [number, number][] = [
@@ -37,13 +43,12 @@ const CAM: { x: number; y: number; z: number }[] = [
   { x: 493, y: 430, z: 1.05 }, // 8 call to action
 ];
 
+// three neighbouring gardens for "why now", placed around the main island
+// (top-left corner of each, in main-island image pixels, at the 0.5 zoom)
 const OTHERS = [
-  { x: -260, y: -620, s: 0.3 },
-  { x: 1180, y: -330, s: 0.34 },
-  { x: 1250, y: 520, s: 0.34 },
-  { x: 1380, y: -60, s: 0.26 },
-  { x: 260, y: 1080, s: 0.36 },
-  { x: 900, y: 1150, s: 0.28 },
+  { x: 1110, y: -340, s: 0.3 }, // upper right
+  { x: -200, y: -300, s: 0.26 }, // upper left
+  { x: -190, y: 930, s: 0.32 }, // lower left
 ];
 
 const smooth = (t: number) => t * t * (3 - 2 * t);
@@ -68,16 +73,22 @@ type G = {
   face: 1 | -1;
   shown: number;
   token: number;
+  phase: number;
   el: HTMLDivElement | null;
-  img: HTMLImageElement | null;
+  rig: HTMLDivElement | null;
+  body: HTMLDivElement | null;
+  legL: HTMLDivElement | null;
+  legR: HTMLDivElement | null;
   tok: HTMLDivElement | null;
 };
+
+type Parts = Pick<G, "el" | "rig" | "body" | "legL" | "legR" | "tok">;
 
 export default function IslandScene2D() {
   const world = useRef<HTMLDivElement>(null);
   const others = useRef<(HTMLImageElement | null)[]>([]);
-  const gEls = useRef<{ el: HTMLDivElement | null; img: HTMLImageElement | null; tok: HTMLDivElement | null }[]>(
-    Array.from({ length: GARDENERS }, () => ({ el: null, img: null, tok: null })),
+  const gEls = useRef<Parts[]>(
+    Array.from({ length: GARDENERS }, () => ({ el: null, rig: null, body: null, legL: null, legR: null, tok: null })),
   );
 
   useEffect(() => {
@@ -89,7 +100,7 @@ export default function IslandScene2D() {
     };
     const gs: G[] = Array.from({ length: GARDENERS }, (_, i) => {
       const [x, y] = SPOTS[Math.floor(rand() * SPOTS.length)];
-      return { x, y, tx: x, ty: y, wait: rand() * 2, speed: 26 + rand() * 14, face: 1, shown: 0, token: 0, ...gEls.current[i] };
+      return { x, y, tx: x, ty: y, wait: rand() * 2, speed: 11 + rand() * 5, face: 1, shown: 0, token: 0, phase: 0, ...gEls.current[i] };
     });
 
     const pickTarget = (g: G, focus: { x: number; y: number; z: number }) => {
@@ -152,35 +163,51 @@ export default function IslandScene2D() {
         const dy = g.ty - g.y;
         const d = Math.hypot(dx, dy);
         let moving = false;
-        if (d > 1.5) {
-          const step = Math.min(d, g.speed * dt);
+        if (d > 0.8) {
+          // ease out over the last few pixels so arrivals don't snap
+          const step = Math.min(d, g.speed * dt * Math.min(1, d / 6 + 0.35));
           g.x += (dx / d) * step;
           g.y += (dy / d) * step;
-          if (Math.abs(dx) > 0.5) g.face = dx > 0 ? -1 : 1;
+          g.phase += (step / STRIDE) * Math.PI;
+          // only turn around on a clear sideways move, so they don't flicker
+          if (Math.abs(dx) / d > 0.35) g.face = dx > 0 ? -1 : 1;
           moving = true;
         } else if (!(i === 0 && s.hesitate > 0.5)) {
           g.wait -= dt;
           if (g.wait <= 0) {
             pickTarget(g, cam);
-            g.wait = 1.2 + rand() * 3;
+            g.wait = 2 + rand() * 4;
           }
+        }
+        if (!moving) {
+          // settle the legs back under the body
+          const rest = Math.round(g.phase / Math.PI) * Math.PI;
+          g.phase += (rest - g.phase) * (1 - Math.exp(-dt * 10));
         }
 
         const want = i < EARLY_GARDENERS && goneHome && on ? 1 : 0;
         g.token += (want - g.token) * (1 - Math.exp(-dt * 4));
 
-        // hops snap to whole image pixels so motion stays crisp
-        const hop = moving ? Math.round(Math.abs(Math.sin(t * 9 + i)) * 2) : 0;
-        const cheer = s.met > 0.5 && on ? Math.round(Math.abs(Math.sin(t * 5 + i)) * 4) : 0;
+        // walk cycle, snapped to whole sprite pixels
+        const sw = Math.sin(g.phase);
+        const liftL = Math.round(Math.max(0, sw) * 2) * U;
+        const liftR = Math.round(Math.max(0, -sw) * 2) * U;
+        const swingL = Math.round(sw * 1.5) * U;
+        const bob = Math.round(Math.abs(sw)) * U;
+        const cheer = s.met > 0.5 && on ? Math.round(Math.max(0, Math.sin(t * 4 + i * 1.7)) * 4) * U : 0;
+
         if (g.el) {
-          g.el.style.transform = `translate3d(${Math.round(g.x - G_W / 2)}px, ${Math.round(g.y - G_H - hop - cheer)}px, 0)`;
+          g.el.style.transform = `translate3d(${(g.x - G_W / 2).toFixed(2)}px, ${(g.y - G_H - cheer).toFixed(2)}px, 0)`;
           g.el.style.opacity = g.shown.toFixed(3);
           g.el.style.zIndex = String(Math.round(g.y));
         }
-        if (g.img) g.img.style.transform = `scaleX(${g.face})`;
+        if (g.rig) g.rig.style.transform = `scaleX(${g.face})`;
+        if (g.body) g.body.style.transform = `translate3d(0, ${(-bob).toFixed(2)}px, 0)`;
+        if (g.legL) g.legL.style.transform = `translate3d(${swingL.toFixed(2)}px, ${(-liftL).toFixed(2)}px, 0)`;
+        if (g.legR) g.legR.style.transform = `translate3d(${(-swingL).toFixed(2)}px, ${(-liftR).toFixed(2)}px, 0)`;
         if (g.tok) {
           g.tok.style.opacity = g.token.toFixed(3);
-          g.tok.style.transform = `translate3d(-50%, ${Math.round(-6 - (1 - g.token) * 20 + Math.sin(t * 3 + i) * 1.5)}px, 0)`;
+          g.tok.style.transform = `translate3d(-50%, ${(-6 - (1 - g.token) * 20 + Math.sin(t * 2 + i) * 1.2).toFixed(2)}px, 0)`;
         }
       });
 
@@ -220,16 +247,36 @@ export default function IslandScene2D() {
           >
             {/* ground shadow */}
             <div className="absolute left-1/2 rounded-[50%]" style={{ bottom: -2, width: G_W * 0.7, height: 5, marginLeft: -G_W * 0.35, background: "rgba(40,30,15,0.35)" }} />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <div
               ref={(el) => {
-                gEls.current[i].img = el;
+                gEls.current[i].rig = el;
               }}
-              src={i < EARLY_GARDENERS ? "/pilgrim.png" : "/pilgrim-late.png"}
-              alt=""
-              draggable={false}
-              className="pixelated absolute inset-0 h-full w-full"
-            />
+              className="absolute inset-0"
+            >
+              {[
+                { r: BODY, key: "body" as const },
+                { r: LEG_L, key: "legL" as const },
+                { r: LEG_R, key: "legR" as const },
+              ].map(({ r, key }) => (
+                <div
+                  key={key}
+                  ref={(el) => {
+                    gEls.current[i][key] = el;
+                  }}
+                  className="pixelated absolute"
+                  style={{
+                    left: r.x * U,
+                    top: r.y * U,
+                    width: r.w * U,
+                    height: r.h * U,
+                    backgroundImage: `url(${i < EARLY_GARDENERS ? "/pilgrim.png" : "/pilgrim-late.png"})`,
+                    backgroundSize: `${G_W}px ${G_H}px`,
+                    backgroundPosition: `${-r.x * U}px ${-r.y * U}px`,
+                    zIndex: key === "body" ? 1 : 0,
+                  }}
+                />
+              ))}
+            </div>
             {/* bonus token, shown over early backers when a campaign misses */}
             <div
               ref={(el) => {
