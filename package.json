@@ -1,0 +1,20 @@
+{
+  "name": "boomerang-arc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=26 <27"
+  },
+  "workspaces": [
+    "contracts",
+    "packages/*",
+    "services/*",
+    "web"
+  ],
+  "scripts": {
+    "test": "npm test --workspaces --if-present && node --test web/test/",
+    "verify": "npm run build -w @boomerang/contracts && node scripts/check-live.mjs"
+  }
+}

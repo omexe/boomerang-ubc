@@ -1,0 +1,11 @@
+# Allow-list: only what the keeper's image needs goes to the builder. Nothing else in the
+# repository (an .env, a local chain's data, build output) can end up in the image.
+*
+!package.json
+!package-lock.json
+!packages/kit/
+!services/keeper/package.json
+!services/keeper/src/
+!contracts/package.json
+!web/package.json
+**/node_modules
