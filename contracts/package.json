@@ -1,0 +1,17 @@
+{
+  "name": "@boomerang/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "hardhat build",
+    "test": "hardhat test nodejs"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-viem": "5.0.7",
+    "@types/node": "24.19.2",
+    "hardhat": "3.22.0",
+    "typescript": "6.0.3",
+    "viem": "2.57.19"
+  }
+}
