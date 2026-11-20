@@ -20,6 +20,7 @@ export default function CampaignHud() {
   const early = useRef<HTMLSpanElement>(null);
   const status = useRef<HTMLSpanElement>(null);
   const dot = useRef<HTMLSpanElement>(null);
+  const note = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     let raf = 0;
@@ -27,7 +28,7 @@ export default function CampaignHud() {
     const tick = () => {
       const c = campaignAt(story.p);
       const shown = c.status === "met" ? demoCampaign.goal : c.status === "missed" ? 0 : c.pledged;
-      const key = `${Math.round(shown)}|${c.backers}|${c.early}|${c.status}`;
+      const key = `${Math.round(shown)}|${c.backers}|${c.early}|${c.status}|${story.note}`;
       if (key !== last) {
         last = key;
         if (pledged.current) pledged.current.textContent = usd(shown);
@@ -37,6 +38,7 @@ export default function CampaignHud() {
         const st = STATUS[c.status];
         if (status.current) status.current.textContent = st.label;
         if (dot.current) dot.current.style.background = st.color;
+        if (note.current) note.current.textContent = story.note;
         if (bar.current) bar.current.style.background = c.status === "met" ? "var(--color-met)" : "var(--color-paper)";
       }
       raf = requestAnimationFrame(tick);
@@ -72,7 +74,7 @@ export default function CampaignHud() {
           <p className="mt-0.5 text-paper"><span ref={early}>0</span></p>
         </div>
       </div>
-      <p className="mt-4 border-t border-line pt-3 text-[12px] text-mist">Each figure is 0.5% of the goal.</p>
+      <p ref={note} className="mt-4 border-t border-line pt-3 text-[12px] text-mist" />
     </aside>
   );
 }

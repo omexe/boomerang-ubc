@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { RoundedBox, Sparkles } from "@react-three/drei";
@@ -600,6 +600,9 @@ function OtherIslands() {
 // ---------------------------------------------------------------- canvas
 
 export default function IslandScene() {
+  useEffect(() => {
+    story.note = "Each figure is 0.5% of the goal.";
+  }, []);
   return (
     <Canvas
       orthographic

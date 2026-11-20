@@ -62,3 +62,9 @@ body {
   overflow: hidden;
   padding-bottom: 0.08em;
 }
+
+/* the pixel island renders small and scales up without smoothing */
+.pixel-canvas canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}

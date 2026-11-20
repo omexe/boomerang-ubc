@@ -1,16 +1,21 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 
-const IslandScene = dynamic(() => import("./IslandScene"), {
-  ssr: false,
-  loading: () => null,
-});
+// v2 (pixel island) is the default. Add ?scene=v1 to the URL to see the
+// original smooth island, kept for comparison and easy rollback.
+const PixelScene = dynamic(() => import("./IslandScenePixel"), { ssr: false, loading: () => null });
+const SmoothScene = dynamic(() => import("./IslandSceneV1"), { ssr: false, loading: () => null });
 
 export default function SceneMount() {
+  const [v1, setV1] = useState(false);
+  useEffect(() => {
+    setV1(new URLSearchParams(window.location.search).get("scene") === "v1");
+  }, []);
   return (
     <div className="fixed inset-0 z-0" aria-hidden>
-      <IslandScene />
+      {v1 ? <SmoothScene /> : <PixelScene />}
       {/* fade the scene into the page */}
       <div
         className="pointer-events-none absolute inset-0"

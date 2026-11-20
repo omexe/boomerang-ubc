@@ -30,7 +30,7 @@ const K: StoryParams[] = [
   // 4 late backers
   { zoom: 1.1, offsetX: 0.2, lift: -0.3, spin: 2.0, early: 1, late: 0.65, hesitate: 0, match: 1, bonus: 1, met: 0, missed: 0, many: 0 },
   // 5 goal met
-  { zoom: 0.92, offsetX: 0.22, lift: -0.2, spin: 2.35, early: 1, late: 1, hesitate: 0, match: 1, bonus: 1, met: 1, missed: 0, many: 0 },
+  { zoom: 1.0, offsetX: 0.22, lift: -0.2, spin: 2.35, early: 1, late: 1, hesitate: 0, match: 1, bonus: 1, met: 1, missed: 0, many: 0 },
   // 6 goal missed
   { zoom: 1.1, offsetX: 0.2, lift: -0.4, spin: 2.9, early: 0.8, late: 0.3, hesitate: 0, match: 1, bonus: 1, met: 0, missed: 1, many: 0 },
   // 7 why now
@@ -57,6 +57,7 @@ export function paramsAt(p: number): StoryParams {
 export const story = {
   target: 0,
   p: 0,
+  note: "", // legend line for the campaign card, set by the active scene
 };
 
 // ---- campaign used across the home page ---------------------------------
