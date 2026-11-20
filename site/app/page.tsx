@@ -79,6 +79,13 @@ export default function Home() {
       <ScrollDriver />
       <CampaignHud />
 
+      {/* text scrolls under this band and fades out before it reaches the header */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 z-20 h-[118px]"
+        style={{ background: "linear-gradient(to bottom, #1d1d1d 0%, #1d1d1d 52%, rgba(29,29,29,0) 100%)" }}
+      />
+
       {/* header */}
       <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between px-6 py-5 md:px-[7vw]">
         <Link href="/" className="flex items-center gap-3">

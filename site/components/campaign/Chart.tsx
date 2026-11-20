@@ -9,8 +9,8 @@ import type { CampaignView } from "../../../web/src/data/load.ts";
 import { formatUsd } from "../../../web/src/data/money.ts";
 import { axisEnds, chartPaths, chartView, TARGET_LABEL_Y, valueLabelY } from "../../../web/src/views/chart.ts";
 
-const TOP = 26;
-const BOTTOM = 26;
+const TOP = 22;
+const BOTTOM = 22;
 const INK = "#2b2719";
 const INK2 = "#5a523d";
 const LINE = "#cdc1a0";
@@ -20,10 +20,14 @@ const BAND = "rgba(192,138,39,0.14)";
 export function Chart({ campaign, ledger, now }: { campaign: CampaignView; ledger: LedgerView | null; now: bigint }) {
   const frame = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [tall, setTall] = useState(0);
   useLayoutEffect(() => {
     const el = frame.current;
     if (!el) return;
-    const read = () => setWidth(el.clientWidth);
+    const read = () => {
+      setWidth(el.clientWidth);
+      setTall(el.clientHeight);
+    };
     read();
     const ro = new ResizeObserver(read);
     ro.observe(el);
@@ -31,7 +35,7 @@ export function Chart({ campaign, ledger, now }: { campaign: CampaignView; ledge
   }, []);
 
   const v = chartView({ campaign, ledger, now });
-  const height = width < 520 ? 200 : 240;
+  const height = Math.max(tall, 120);
   const box = { w: Math.max(width, 1), h: height - TOP - BOTTOM };
   const p = chartPaths(v, box);
   const taking = now < v.closes && now >= v.opens;
@@ -42,10 +46,10 @@ export function Chart({ campaign, ledger, now }: { campaign: CampaignView; ledge
   const label = { fill: INK2, fontSize: 12, fontFamily: "var(--font-sans)" };
 
   return (
-    <figure className="m-0">
-      <div ref={frame} className="w-full">
+    <figure className="m-0 flex h-full flex-col">
+      <div ref={frame} className="min-h-0 w-full flex-1 overflow-hidden">
         {width > 0 ? (
-          <svg width={box.w} height={height} viewBox={`0 ${-TOP} ${box.w} ${height}`} aria-hidden="true" focusable="false">
+          <svg className="block" width={box.w} height={height} viewBox={`0 ${-TOP} ${box.w} ${height}`} aria-hidden="true" focusable="false">
             {p.band ? (
               <>
                 <rect x={p.band.x} y={0} width={p.band.w} height={box.h} fill={BAND} />
@@ -57,13 +61,13 @@ export function Chart({ campaign, ledger, now }: { campaign: CampaignView; ledge
               </>
             ) : null}
             <line x1={0} x2={box.w} y1={box.h} y2={box.h} stroke={LINE} />
-            {taking ? <path d={p.pace} fill="none" stroke={INK2} strokeDasharray="2 4" strokeWidth={1.5} /> : null}
+            {taking ? <path d={p.pace} fill="none" stroke={LINE} strokeWidth={1.5} /> : null}
             {taking ? (
               <text x={box.w - 4} y={paceLabelY} textAnchor="end" {...label}>
                 Pace needed
               </text>
             ) : null}
-            <line x1={0} x2={box.w} y1={p.targetY} y2={p.targetY} stroke={INK} strokeDasharray="6 4" />
+            <line x1={0} x2={box.w} y1={p.targetY} y2={p.targetY} stroke={INK2} strokeWidth={1} />
             <text x={box.w} y={TARGET_LABEL_Y} textAnchor="end" {...label}>
               Goal {formatUsd(v.target)}
             </text>
@@ -83,7 +87,7 @@ export function Chart({ campaign, ledger, now }: { campaign: CampaignView; ledge
         ) : null}
       </div>
       <figcaption className="sr-only">{v.summary}</figcaption>
-      {v.why ? <p className="mt-2 text-[13px] text-g-ink2">{v.why}</p> : null}
+      {v.why ? <p className="mt-1 text-[12px] text-g-ink2">{v.why}</p> : null}
     </figure>
   );
 }

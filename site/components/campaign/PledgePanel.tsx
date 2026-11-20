@@ -155,7 +155,7 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
       aria-labelledby="pledge-title"
     >
       <div className="flex items-baseline justify-between gap-4">
-        <h2 id="pledge-title" className="font-serif text-[26px] leading-tight text-g-ink">
+        <h2 id="pledge-title" className="font-serif text-[24px] leading-tight text-g-ink">
           Pledge
         </h2>
       </div>
