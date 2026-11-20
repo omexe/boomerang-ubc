@@ -7,6 +7,7 @@
 import { useEffect, useRef } from "react";
 import { DOORS, doorGlow, maybeEnter, newVisit, stepVisit, type DoorVisit } from "@/components/garden/doors";
 import { fitPixels } from "@/components/garden/pixels";
+import { GOAL_FILL, PROPS, updateProps } from "./props";
 import { EARLY_COUNT, PILGRIMS, paramsAt, story } from "@/lib/story";
 import {
   BODY,
@@ -31,14 +32,14 @@ const EARLY_GARDENERS = Math.round((GARDENERS * EARLY_COUNT) / PILGRIMS); // 7
 // Camera per section: focus point on the image and zoom (1 = whole island).
 const CAM: { x: number; y: number; z: number }[] = [
   { x: 493, y: 430, z: 1.0 }, // 0 hero: the whole garden
-  { x: 470, y: 610, z: 2.1 }, // 1 problem: the empty front meadow
-  { x: 712, y: 330, z: 2.5 }, // 2 sponsor: the gazebo
-  { x: 236, y: 430, z: 2.1 }, // 3 early backers: the vegetable beds
-  { x: 505, y: 440, z: 1.6 }, // 4 late backers: the big meadow
-  { x: 760, y: 520, z: 2.0 }, // 5 goal met: the pergola
-  { x: 880, y: 430, z: 2.2 }, // 6 goal missed: the shed
+  { x: 520, y: 590, z: 2.1 }, // 1 nobody goes first: the empty jar by the bridge
+  { x: 712, y: 352, z: 2.5 }, // 2 sponsor: the two chests at the gazebo
+  { x: 266, y: 412, z: 2.3 }, // 3 early backers: seedlings in the vegetable beds
+  { x: 500, y: 420, z: 1.9 }, // 4 late backers: the goal meter in the big meadow
+  { x: 760, y: 508, z: 2.1 }, // 5 goal met: bunting on the pergola
+  { x: 878, y: 410, z: 2.2 }, // 6 goal missed: the boomerang at the shed
   { x: 493, y: 430, z: 0.5 }, // 7 why now: pull back to see other gardens
-  { x: 493, y: 430, z: 1.05 }, // 8 call to action
+  { x: 545, y: 520, z: 1.3 }, // 8 call to action: the signpost
 ];
 
 // three neighbouring gardens for "why now", placed around the main island
@@ -92,6 +93,8 @@ export default function IslandScene2D() {
   const others = useRef<(HTMLImageElement | null)[]>([]);
   const art = useRef<HTMLImageElement>(null);
   const glows = useRef<(HTMLDivElement | null)[]>([]);
+  const propEls = useRef<(HTMLDivElement | null)[]>([]);
+  const propFills = useRef<(HTMLDivElement | null)[]>([]);
   const gEls = useRef<Parts[]>(
     Array.from({ length: GARDENERS }, () => ({ el: null, rig: null, body: null, legL: null, legR: null, tok: null })),
   );
@@ -177,6 +180,7 @@ export default function IslandScene2D() {
       const progress = (s.early * EARLY_COUNT + s.late * (PILGRIMS - EARLY_COUNT)) / PILGRIMS;
       const active = gardenersFor(Math.max(progress, s.met));
       const goneHome = s.missed > 0.5;
+      updateProps(propEls.current, propFills.current, story.p, t, { progress: Math.max(progress, s.met), met: s.met > 0.5 });
 
       gs.forEach((g, i) => {
         const on = i < active;
@@ -280,6 +284,39 @@ export default function IslandScene2D() {
         ))}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img ref={art} src="/island.png" alt="" draggable={false} className="absolute left-0 top-0" style={{ width: IMG_W, height: IMG_H }} />
+        {PROPS.map((pr, k) => (
+          <div
+            key={pr.id}
+            ref={(el) => {
+              propEls.current[k] = el;
+            }}
+            className="pointer-events-none absolute"
+            style={{
+              left: pr.at[0] - (pr.w * pr.scale) / 2,
+              top: pr.at[1] - pr.h * pr.scale,
+              width: pr.w * pr.scale,
+              height: pr.h * pr.scale,
+              zIndex: pr.move === "drift" ? 2000 : pr.at[1],
+              opacity: 0,
+              transformOrigin: pr.move === "orbit" ? "50% 50%" : pr.move === "sway" ? "50% 15%" : "50% 100%",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {pr.move === undefined || pr.move === "wobble" || pr.move === "fill" ? (
+              <div className="absolute left-1/2 rounded-[50%]" style={{ bottom: -2, width: pr.w * pr.scale * 0.8, height: 5, marginLeft: -pr.w * pr.scale * 0.4, background: "rgba(40,30,15,0.35)" }} />
+            ) : null}
+            <img src={pr.src} alt="" draggable={false} className="pixelated absolute inset-0 h-full w-full" />
+            {pr.move === "fill" ? (
+              <div
+                ref={(el) => {
+                  propFills.current[k] = el;
+                }}
+                className="absolute"
+                style={{ left: GOAL_FILL.x * pr.scale, width: GOAL_FILL.w * pr.scale, top: (GOAL_FILL.y + GOAL_FILL.h) * pr.scale, height: 0 }}
+              />
+            ) : null}
+          </div>
+        ))}
         {DOORS.map((dr, k) => (
           <div key={dr.id} ref={(el) => { glows.current[k] = el; }} className="pointer-events-none absolute" style={{ left: dr.at[0] - 9, top: dr.at[1] - 24, width: 18, height: 26, opacity: 0, zIndex: dr.at[1] - 2, background: "radial-gradient(ellipse at 50% 70%, rgba(255,214,130,0.85), rgba(255,214,130,0) 70%)", mixBlendMode: "screen" }} />
         ))}
