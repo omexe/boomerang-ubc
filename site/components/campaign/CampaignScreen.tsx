@@ -82,45 +82,76 @@ function Body({ ctx, id, focus }: { ctx: Ctx; id: bigint; focus: boolean }) {
           ? "bg-g-gold text-g-sheet"
           : "bg-g-line text-g-ink";
 
-  return (
-    <div className="mt-6 grid gap-10 lg:grid-cols-[minmax(0,1fr)_400px]">
-      {/* left: the story of this campaign */}
-      <div className="min-w-0">
-        <div className="flex gap-2">
-          <span className={`inline-block rounded-[4px] px-2 py-0.5 text-[12px] ${tag}`}>{page.status}</span>
-          {isShowcase(id) ? <span className="inline-block rounded-[4px] border border-g-line px-2 py-0.5 text-[12px] text-g-ink2">Example</span> : null}
-        </div>
-        <h1 className="mt-3 font-serif text-[48px] leading-[1.04]">{page.name.title}</h1>
-        <p className="mt-2 text-[16px] text-g-ink2">
-          {page.name.by} · sponsored by {page.name.sponsorName}
-        </p>
-        {isShowcase(id) && page.name.about ? <p className="mt-3 max-w-[640px] text-[16px] leading-[1.6]">{page.name.about}</p> : null}
+  const pct = Math.min(page.percent, 100);
+  const bar = page.phase === "funded" ? "bg-g-green" : page.phase === "missed" ? "bg-g-red" : "bg-g-ink";
 
-        <section className="mt-8 overflow-hidden rounded-[8px] border border-g-line bg-g-sheet">
-          <div className="px-4 py-4" style={{ background: "radial-gradient(ellipse at 50% 45%, #f4eedd 0%, #e2d7bb 100%)" }}>
+  return (
+    <>
+      {/* first screen: the garden in the middle, the numbers beside it */}
+      <section className="mt-4 grid min-h-[600px] items-center gap-8 lg:h-[calc(100vh-150px)] lg:grid-cols-[260px_minmax(0,1fr)_330px]">
+        <div className="min-w-0 self-center">
+          <div className="flex flex-wrap gap-2">
+            <span className={`inline-block rounded-[4px] px-2 py-0.5 text-[12px] ${tag}`}>{page.status}</span>
+            {isShowcase(id) ? <span className="inline-block rounded-[4px] border border-g-line px-2 py-0.5 text-[12px] text-g-ink2">Example</span> : null}
+          </div>
+          <h1 className="mt-3 font-serif text-[40px] leading-[1.04]">{page.name.title}</h1>
+          <p className="mt-2 text-[14px] text-g-ink2">{page.name.sponsorName}</p>
+
+          <p className="mt-8 font-serif text-[34px] leading-none">{formatUsd(s.pledged)}</p>
+          <p className="mt-1 text-[13px] text-g-ink2">of {formatUsd(t.target)} USDC</p>
+          <div className="mt-3 h-[3px] w-full bg-g-line">
+            <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
+          </div>
+
+          <dl className="mt-6 space-y-4">
+            {board.plates.map((p) => (
+              <div key={p.key}>
+                <dt className="text-[12px] text-g-ink2">{p.caption}</dt>
+                <dd className={`font-serif text-[24px] leading-tight ${p.key === "bonus" ? "text-g-gold" : ""}`}>
+                  {p.figure} <span className="font-sans text-[12px] text-g-ink2">{p.unit}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        <div className="flex h-full min-w-0 items-center justify-center">
+          <div className="w-full max-w-[640px]">
             <GardenMini state={garden} />
           </div>
-        </section>
+        </div>
 
-        <section className="mt-8 rounded-[8px] border border-g-line bg-g-sheet p-5">
-          <div className="flex items-baseline justify-between">
-            <p className="font-serif text-[24px]">{page.raised}</p>
-            <p className="text-[14px] text-g-ink2">{page.backers}</p>
-          </div>
-          <div className="mt-4">
-            <Chart campaign={campaign} ledger={ledger} now={world.now} />
-          </div>
-        </section>
+        <div className="self-center">
+          {taking && isShowcase(id) ? (
+            <ExamplePanel />
+          ) : taking ? (
+            <PledgePanel ctx={ctx} campaign={campaign} focus={focus} onLogin={() => router.push("/login")} />
+          ) : (
+            <Outcome ctx={ctx} id={id} page={page} board={board} mine={mine} myRow={myRow} settled={settledLine(campaign)} />
+          )}
+        </div>
+      </section>
 
+      {/* under the fold */}
+      <section className="mt-10 border-t border-g-line pt-10">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-serif text-[26px]">Progress</h2>
+          <p className="text-[14px] text-g-ink2">{page.backers}</p>
+        </div>
+        <div className="mt-4">
+          <Chart campaign={campaign} ledger={ledger} now={world.now} />
+        </div>
+      </section>
 
-        <section className="mt-10">
-          <h2 className="font-serif text-[26px]">The terms</h2>
+      <div className="mt-14 grid gap-14 lg:grid-cols-2">
+        <section>
+          <h2 className="font-serif text-[26px]">Terms</h2>
           <div className="mt-4">
             <Rows rows={page.rows} explorer={config.chain.explorer} tone="garden" />
           </div>
         </section>
 
-        <section className="mt-10">
+        <section>
           <h2 className="font-serif text-[26px]">{backers.title}</h2>
           {backers.rows.length > 0 ? (
             <table className="mt-4 w-full text-[14px]">
@@ -143,42 +174,13 @@ function Body({ ctx, id, focus }: { ctx: Ctx; id: bigint; focus: boolean }) {
                   </tr>
                 ))}
               </tbody>
-              {backers.total ? (
-                <tfoot>
-                  <tr>
-                    <td className="py-2.5 text-g-ink2">{backers.total.label}</td>
-                    <td className="py-2.5">{backers.total.pledged}</td>
-                  </tr>
-                </tfoot>
-              ) : null}
             </table>
-          ) : null}
-          {backers.rows.length === 0 ? <p className="mt-3 text-[14px] text-g-ink2">{s.backers === 0 ? "No backers yet." : `${s.backers} backers.`}</p> : null}
+          ) : (
+            <p className="mt-4 text-[14px] text-g-ink2">{s.backers === 0 ? "No backers yet." : `${s.backers} backers.`}</p>
+          )}
         </section>
       </div>
-
-      {/* right: figures and the pledge, or the outcome */}
-      <aside className="lg:sticky lg:top-24 lg:self-start">
-        <div className={`grid gap-2 ${board.plates.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-          {board.plates.map((p) => (
-            <div key={p.key} className={`rounded-[6px] border p-3 ${p.key === "bonus" ? "border-g-gold" : "border-g-line"} bg-g-sheet`}>
-              <p className="text-[11px] text-g-ink2">{p.caption}</p>
-              <p className={`mt-1 font-serif text-[22px] leading-none ${p.key === "bonus" ? "text-g-gold" : ""}`}>{p.figure}</p>
-              <p className="mt-1 text-[11px] text-g-ink2">{p.unit}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4">
-          {taking && isShowcase(id) ? (
-            <ExamplePanel />
-          ) : taking ? (
-            <PledgePanel ctx={ctx} campaign={campaign} focus={focus} onLogin={() => router.push("/login")} />
-          ) : (
-            <Outcome ctx={ctx} id={id} page={page} board={board} mine={mine} myRow={myRow} settled={settledLine(campaign)} />
-          )}
-        </div>
-      </aside>
-    </div>
+    </>
   );
 }
 
@@ -205,7 +207,7 @@ function Outcome({
   const result = board.result;
   const color = result?.kind === "reached" ? "text-g-green border-g-green" : result?.kind === "short" ? "text-g-red border-g-red" : "text-g-ink2 border-g-line";
   return (
-    <section className="rounded-[8px] border border-g-line bg-g-sheet p-6">
+    <section>
       {result && !page.settle ? (
         <p className={`inline-block -rotate-2 rounded-[4px] border-2 px-3 py-1 text-[15px] font-semibold uppercase tracking-[0.12em] ${color}`}>{result.kind === "reached" ? "Goal met" : result.kind === "short" ? "Goal missed" : result.flag}</p>
       ) : null}
@@ -268,8 +270,8 @@ function Outcome({
 
 function ExamplePanel() {
   return (
-    <section className="rounded-[8px] border border-g-line bg-g-sheet p-6">
-      <p className="font-serif text-[24px] leading-tight">Example campaign</p>
+    <section>
+      <p className="font-serif text-[26px] leading-tight">Example campaign</p>
       <p className="mt-2 text-[14px] text-g-ink2">Pledging is open on live demo campaigns.</p>
       <Link href="/explore" className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-[6px] bg-g-green text-[15px] font-medium text-g-sheet hover:bg-g-ink">
         Find a live campaign →

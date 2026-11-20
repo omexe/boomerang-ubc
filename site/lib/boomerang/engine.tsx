@@ -28,6 +28,7 @@ import { startPoll, type Poll, type PollHost } from "../../../web/src/app/poll.t
 import { campaignIn, readWorld, type World } from "../../../web/src/app/world.ts";
 import { MOCK_ACCOUNT, mockWorld } from "./mock";
 import { isShowcase, withShowcase } from "./showcase";
+import { loadMyLabels, saveMyLabel } from "./sponsor";
 
 const MOCK = process.env.NEXT_PUBLIC_MOCK === "1";
 
@@ -103,6 +104,8 @@ export type Engine = {
   setRole(r: Role | null): void;
   /** The campaign a page shows, so each read takes in its backers. */
   show(id: bigint | null): void;
+  /** Name a campaign this browser's sponsor made. */
+  nameCampaign(l: { id: bigint; sponsor: Address; recipient: Address; title: string }): void;
 };
 
 const EngineContext = createContext<Engine | null>(null);
@@ -164,6 +167,7 @@ function stoppedEngine(problem: string | null): Engine {
     role: null,
     setRole: noop,
     show: noop,
+    nameCampaign: noop,
   };
 }
 
@@ -173,6 +177,12 @@ function Running({ config, children }: { config: Config; children: React.ReactNo
 
   // This site's names for campaigns. Missing or unreadable means campaigns go by number.
   const [labels, setLabels] = useState<Label[]>([]);
+  const [myLabels, setMyLabels] = useState<Label[]>([]);
+  useEffect(() => setMyLabels(loadMyLabels()), []);
+  const nameCampaign = useCallback((l: { id: bigint; sponsor: Address; recipient: Address; title: string }) => {
+    saveMyLabel(l);
+    setMyLabels(loadMyLabels());
+  }, []);
   useEffect(() => {
     fetch("/labels.json", { cache: "no-store", credentials: "omit" })
       .then((r) => (r.status === 200 ? r.json() : []))
@@ -579,7 +589,7 @@ function Running({ config, children }: { config: Config; children: React.ReactNo
       : {
           config,
           world: shown.world,
-          labels: [...labels, ...shown.labels],
+          labels: [...labels, ...myLabels, ...shown.labels],
           desk: world.keeper.up ? world.keeper.health.desk : null,
           relay: world.keeper.up ? world.keeper.health.relay : null,
           account,
@@ -637,6 +647,7 @@ function Running({ config, children }: { config: Config; children: React.ReactNo
     role,
     setRole,
     show,
+    nameCampaign,
   };
 
   return <EngineContext.Provider value={engine}>{children}</EngineContext.Provider>;

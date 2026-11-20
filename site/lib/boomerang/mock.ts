@@ -48,11 +48,17 @@ export function mockWorld(now: bigint, account: `0x${string}` | null = null): Wo
     campaign(13n, now, { open: -3000n, early: -1200n, close: 1800n, target: 12_000n * U, pledged: 9_400n * U, early$: 6_100n * U, backers: 41, outcome: 0 }),
     campaign(12n, now, { open: -90_000n, early: -80_000n, close: -3600n, target: 8_000n * U, pledged: 8_000n * U, early$: 5_200n * U, backers: 52, outcome: 1 }),
     campaign(11n, now, { open: -190_000n, early: -180_000n, close: -86_000n, target: 20_000n * U, pledged: 11_800n * U, early$: 9_000n * U, backers: 63, outcome: 2 }),
+    campaign(15n, now, { open: 150n, early: 390n, close: 750n, target: 3n * U, pledged: 0n, early$: 0n, backers: 0, outcome: 0 }),
   ];
+  if (account) {
+    for (const c of [campaigns[1], campaigns[4]]) c.state.sponsor = account;
+    campaigns[4].state.matchIn = false;
+    campaigns[4].state.bonusIn = false;
+  }
   return {
     block: 72_900_000n,
     now,
-    count: 14n,
+    count: 15n,
     campaigns,
     extra: null,
     custody: { block: 72_900_000n, time: now, held: 0n, owed: 0n, events: 0n, ok: true },

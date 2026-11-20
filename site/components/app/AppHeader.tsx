@@ -50,6 +50,9 @@ export function AppHeader({ tone }: { tone: Tone }) {
               <Link href="/pledges" className="hover:underline">
                 My pledges
               </Link>
+              <Link href="/sponsor" className="hover:underline">
+                Sponsor
+              </Link>
             </nav>
           </div>
 

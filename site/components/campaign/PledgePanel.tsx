@@ -147,7 +147,7 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
 
   return (
     <form
-      className="rounded-[8px] border border-g-line bg-g-sheet p-6"
+      className=""
       onSubmit={(e) => {
         e.preventDefault();
         submit();
@@ -161,7 +161,7 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
       </div>
 
       {/* amount */}
-      <label htmlFor="pledge-amount" className="mt-5 block text-[13px] text-g-ink2">
+      <label htmlFor="pledge-amount" className="mt-4 block text-[13px] text-g-ink2">
         Amount
       </label>
       <div className="mt-1.5 flex items-center rounded-[6px] border border-g-line bg-g-bg focus-within:border-g-ink">
@@ -173,7 +173,7 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
           value={text}
           readOnly={busy}
           onChange={(e) => setText(e.target.value)}
-          className="h-14 w-full bg-transparent px-4 font-serif text-[30px] text-g-ink outline-none"
+          className="h-12 w-full bg-transparent px-4 font-serif text-[26px] text-g-ink outline-none"
         />
         <span className="pr-4 text-[14px] text-g-ink2">USDC</span>
       </div>
@@ -189,12 +189,12 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
       {/* the contract's answer: both endings */}
       <div className="mt-5" aria-live="polite">
         {receipt.kind === "two" ? (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-[6px] border border-g-line p-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
               <p className="text-[12px] text-g-ink2">If the goal is met</p>
               <p className="mt-1 font-serif text-[22px] text-g-green">{receipt.met.figure.replace(/ USDC$/, "")}</p>
             </div>
-            <div className={`rounded-[6px] border p-3 ${receipt.missed.live ? "border-g-gold" : "border-g-line"}`}>
+            <div>
               <p className="text-[12px] text-g-ink2">If it misses</p>
               <p className="mt-1 font-serif text-[22px] text-g-red">{receipt.missed.figure.replace(/ USDC$/, "")}</p>
             </div>
@@ -205,7 +205,7 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
       </div>
 
       {/* where the money comes from */}
-      <div className="mt-5">
+      <div className="mt-4">
         <p className="text-[13px] text-g-ink2">Pay from</p>
         <div className="mt-1.5 flex flex-wrap gap-2">
           <span className="rounded-[4px] border border-g-ink bg-g-ink px-2.5 py-1 text-[13px] text-g-sheet">Arc Testnet</span>
@@ -220,7 +220,7 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
       <button
         type="submit"
         disabled={disabled}
-        className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-[6px] bg-g-green text-[15px] font-medium text-g-sheet transition-colors hover:bg-g-ink disabled:bg-g-line disabled:text-g-ink2"
+        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-[6px] bg-g-green text-[15px] font-medium text-g-sheet transition-colors hover:bg-g-ink disabled:bg-g-line disabled:text-g-ink2"
       >
         {button} <span aria-hidden>→</span>
       </button>

@@ -112,28 +112,27 @@ function Card({ c, ctx }: { c: CampaignView; ctx: NonNullable<ReturnType<typeof 
   const pct = Math.min(page.percent, 100);
   const bar = page.phase === "funded" ? "bg-met" : page.phase === "missed" ? "bg-missed" : "bg-paper";
   return (
-    <Link href={`/campaign/${c.id}`} className="group flex flex-col rounded-[6px] border border-line bg-smoke/50 p-5 transition-colors hover:border-paper">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="truncate font-serif text-[22px] leading-tight text-paper">{page.name.title}</p>
-          <p className="mt-1 truncate text-[13px] text-mist">{page.name.by}</p>
-        </div>
+    <Link href={`/campaign/${c.id}`} className="group flex flex-col overflow-hidden rounded-[6px] border border-line bg-smoke/50 transition-colors hover:border-paper">
+      <div className="flex h-24 items-center justify-center border-b border-line bg-charcoal">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/island.png" alt="" className="pixelated h-12 w-14 shrink-0 object-contain" />
+        <img src="/logo-mark.png" alt="" className="h-7 w-7" />
       </div>
-      <div className="mt-4 flex gap-2">
-        <span className={`rounded-[4px] border px-2 py-0.5 text-[12px] ${TAG[page.phase]}`}>{page.status}</span>
-        {isShowcase(c.id) ? <span className="rounded-[4px] border border-line px-2 py-0.5 text-[12px] text-mist">Example</span> : null}
+      <div className="p-4">
+        <p className="truncate font-serif text-[21px] leading-tight text-paper">{page.name.title}</p>
+        <p className="truncate text-[13px] leading-snug text-mist">{page.name.by}</p>
+        <div className="mt-2.5 flex gap-2">
+          <span className={`rounded-[4px] border px-2 py-0.5 text-[12px] leading-tight ${TAG[page.phase]}`}>{page.status}</span>
+          {isShowcase(c.id) ? <span className="rounded-[4px] border border-line px-2 py-0.5 text-[12px] leading-tight text-mist">Example</span> : null}
+        </div>
+        <div className="mt-3 flex items-baseline justify-between font-mono text-[13px] leading-tight">
+          <span className="text-paper">{page.raised}</span>
+          <span className="text-mist">{page.percent}%</span>
+        </div>
+        <div className="mt-1.5 h-[3px] w-full rounded-full bg-line">
+          <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
+        </div>
+        <p className="mt-2.5 text-[13px] leading-snug text-paper">{page.clock}</p>
       </div>
-      <div className="mt-5 flex items-baseline justify-between font-mono text-[13px]">
-        <span className="text-paper">{page.raised}</span>
-        <span className="text-mist">{page.percent}%</span>
-      </div>
-      <div className="mt-2 h-[3px] w-full rounded-full bg-line">
-        <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
-      </div>
-      <p className="mt-4 text-[13px] text-paper">{page.clock}</p>
-
     </Link>
   );
 }
