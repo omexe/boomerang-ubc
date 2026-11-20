@@ -31,6 +31,27 @@ To change what the island does in a section, edit that section's row in `lib/sto
 
 ## Status
 
-This is the redesigned frontend, built beside `web/` on the `frontend` branch. It is standalone for now (its own package.json, not a root workspace) and runs on demo data from `lib/story.ts`. Next step: read real campaigns through the contract reads in `web/src/data` and `packages/kit`, then add the backer and sponsor dashboards.
+The redesigned frontend, built beside `web/`. Pages:
 
-Run it from this folder: `npm install && npm run dev`.
+- `/`: the home page (garden island, scroll story). Older scenes at `?scene=v1` and `?scene=v2`.
+- `/login`: pick backer or sponsor; the practice wallet is the default.
+- `/explore`: every campaign on the contract, live first.
+- `/campaign/[id]`: one campaign in the garden palette, with pledging (`/campaign/[id]/pledge` focuses the amount).
+- `/sponsor`: placeholder until the sponsor pages.
+
+The working pages reuse the existing app's code directly: `web/src/data`, `web/src/flows`,
+`web/src/views`, `web/src/wallet` and `packages/kit`, through `lib/boomerang/engine.tsx`. So the
+contract reads, the one-signature pledge, the two-step fallback, the practice wallet and every
+sentence are the same code `web/` runs.
+
+## Setup
+
+```bash
+cp .env.example .env.local   # then set NEXT_PUBLIC_KEEPER_URL (same value as web's VITE_KEEPER_URL)
+npm install
+npm run dev
+```
+
+Without the keeper URL every campaign still reads from the contract, but the practice wallet
+gets no test USDC and one-signature pledges are off. `NEXT_PUBLIC_MOCK=1` shows made-up
+campaigns with no network, for checking layouts.

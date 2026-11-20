@@ -11,6 +11,18 @@
   --color-missed: #e6a69e;
   --color-glow: #f6e7b8;
 
+  /* the garden palette, used on campaign pages only */
+  --color-g-bg: #e9e0c9;
+  --color-g-sheet: #f4eedd;
+  --color-g-ink: #2b2719;
+  --color-g-ink2: #5a523d;
+  --color-g-line: #cdc1a0;
+  --color-g-moss: #6f8442;
+  --color-g-green: #4f6b2c;
+  --color-g-red: #a3462f;
+  --color-g-gold: #c08a27;
+  --color-g-soil: #6b4a32;
+
   --font-serif: var(--font-superior), "Times New Roman", serif;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
