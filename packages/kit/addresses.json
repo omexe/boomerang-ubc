@@ -1,0 +1,13 @@
+{
+  "5042002": {
+    "boomerang": "0x03Aa341b3128fD5d742bCCE00133791a6bcE7F97",
+    "router": "0xc9e2b828f63e104dfe6d67bdb7bfc2e76cc67b2a",
+    "signedPledge": "0x2eef524e9c7ea4d8fd1a7e771aca60e1010cb87a",
+    "usdc": "0x3600000000000000000000000000000000000000",
+    "transmitter": "0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275",
+    "messenger": "0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA",
+    "deployBlock": "72640266",
+    "boomerangTx": "0x680d34a099d41a74f4611060c24bb2dc277672d9ba94875373042ffca3bf8c83",
+    "desk": "0x47E2f2C3e420bf9E859E742CbBB054b8bD675430"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@boomerang/kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./addresses.json": "./addresses.json"
+  },
+  "scripts": {
+    "sync-abi": "node scripts/sync-abi.mjs"
+  },
+  "dependencies": {
+    "viem": "2.57.19"
+  }
+}
