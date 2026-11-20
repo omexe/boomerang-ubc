@@ -15,6 +15,9 @@ import { boardView, settledLine } from "../../../web/src/views/board.ts";
 import { campaignPage, missingPage, voucherMine } from "../../../web/src/views/campaign.ts";
 import { minePage } from "../../../web/src/views/mine.ts";
 import { AppHeader } from "@/components/app/AppHeader";
+import { Breadcrumbs } from "@/components/app/Breadcrumbs";
+import { isShowcase } from "@/lib/boomerang/showcase";
+import { nameOf } from "../../../web/src/data/labels.ts";
 import { Rows, SendStatus } from "@/components/app/ui";
 import { GardenMini } from "@/components/garden/GardenMini";
 import { useEngine, useShownCampaign } from "@/lib/boomerang/engine";
@@ -24,13 +27,13 @@ import { PledgePanel } from "./PledgePanel";
 export function CampaignScreen({ id, focus }: { id: bigint; focus: boolean }) {
   useShownCampaign(id);
   const { ctx, problem, readFailed } = useEngine();
+  const c = ctx ? campaignIn(ctx.world, id) : undefined;
+  const crumb = ctx && c ? nameOf(ctx.labels, c, ctx.config.desk).title : `Campaign ${id}`;
   return (
     <div className="min-h-screen bg-g-bg text-g-ink">
       <AppHeader tone="garden" />
       <main className="mx-auto max-w-[1240px] px-6 pb-24 pt-8">
-        <Link href="/explore" className="text-[14px] text-g-ink2 hover:text-g-ink">
-          ← All campaigns
-        </Link>
+        <Breadcrumbs items={[{ label: "Explore", href: "/explore" }, { label: crumb }]} tone="garden" />
         {ctx ? <Body ctx={ctx} id={id} focus={focus} /> : <p className="mt-10 text-[16px]">{problem ?? (readFailed ? "The chain could not be read. Trying again…" : "Reading the chain…")}</p>}
       </main>
     </div>
@@ -83,18 +86,20 @@ function Body({ ctx, id, focus }: { ctx: Ctx; id: bigint; focus: boolean }) {
     <div className="mt-6 grid gap-10 lg:grid-cols-[minmax(0,1fr)_400px]">
       {/* left: the story of this campaign */}
       <div className="min-w-0">
-        <span className={`inline-block rounded-[4px] px-2 py-0.5 text-[12px] ${tag}`}>{page.status}</span>
+        <div className="flex gap-2">
+          <span className={`inline-block rounded-[4px] px-2 py-0.5 text-[12px] ${tag}`}>{page.status}</span>
+          {isShowcase(id) ? <span className="inline-block rounded-[4px] border border-g-line px-2 py-0.5 text-[12px] text-g-ink2">Example</span> : null}
+        </div>
         <h1 className="mt-3 font-serif text-[48px] leading-[1.04]">{page.name.title}</h1>
         <p className="mt-2 text-[16px] text-g-ink2">
           {page.name.by} · sponsored by {page.name.sponsorName}
         </p>
-        {page.name.about ? <p className="mt-4 max-w-[640px] text-[16px] leading-[1.6]">{page.name.about}</p> : null}
+        {isShowcase(id) && page.name.about ? <p className="mt-3 max-w-[640px] text-[16px] leading-[1.6]">{page.name.about}</p> : null}
 
         <section className="mt-8 overflow-hidden rounded-[8px] border border-g-line bg-g-sheet">
-          <div className="px-4 pt-4" style={{ background: "radial-gradient(ellipse at 50% 45%, #f4eedd 0%, #e2d7bb 100%)" }}>
+          <div className="px-4 py-4" style={{ background: "radial-gradient(ellipse at 50% 45%, #f4eedd 0%, #e2d7bb 100%)" }}>
             <GardenMini state={garden} />
           </div>
-          <p className="px-5 py-3 text-[13px] text-g-ink2">Gardeners grow as the campaign fills: 2 at the start, 12 at the goal.</p>
         </section>
 
         <section className="mt-8 rounded-[8px] border border-g-line bg-g-sheet p-5">
@@ -107,15 +112,12 @@ function Body({ ctx, id, focus }: { ctx: Ctx; id: bigint; focus: boolean }) {
           </div>
         </section>
 
-        <p className="mt-8 max-w-[680px] font-serif text-[22px] leading-[1.4]">{page.promise}</p>
 
         <section className="mt-10">
           <h2 className="font-serif text-[26px]">The terms</h2>
-          <p className="mt-1 text-[14px] text-g-ink2">As the contract holds them.</p>
           <div className="mt-4">
             <Rows rows={page.rows} explorer={config.chain.explorer} tone="garden" />
           </div>
-          <p className="mt-3 text-[13px] text-g-ink2">{page.control}</p>
         </section>
 
         <section className="mt-10">
@@ -151,7 +153,7 @@ function Body({ ctx, id, focus }: { ctx: Ctx; id: bigint; focus: boolean }) {
               ) : null}
             </table>
           ) : null}
-          {backers.note ? <p className="mt-3 text-[13px] text-g-ink2">{backers.note}</p> : null}
+          {backers.rows.length === 0 ? <p className="mt-3 text-[14px] text-g-ink2">{s.backers === 0 ? "No backers yet." : `${s.backers} backers.`}</p> : null}
         </section>
       </div>
 
@@ -167,15 +169,14 @@ function Body({ ctx, id, focus }: { ctx: Ctx; id: bigint; focus: boolean }) {
           ))}
         </div>
         <div className="mt-4">
-          {taking ? (
+          {taking && isShowcase(id) ? (
+            <ExamplePanel />
+          ) : taking ? (
             <PledgePanel ctx={ctx} campaign={campaign} focus={focus} onLogin={() => router.push("/login")} />
           ) : (
             <Outcome ctx={ctx} id={id} page={page} board={board} mine={mine} myRow={myRow} settled={settledLine(campaign)} />
           )}
         </div>
-        <p className="mt-4 text-[12px] text-g-ink2">
-          {formatUsd(t.matchAmount)} USDC match and {formatUsd(t.bonusPool)} USDC bonus locked by the sponsor. {page.asOf}.
-        </p>
       </aside>
     </div>
   );
@@ -216,7 +217,6 @@ function Outcome({
       ) : null}
       <p className="mt-4 font-serif text-[22px] leading-tight">{page.status}</p>
       {settled ? <p className="mt-2 text-[14px]">{settled}</p> : null}
-      <p className="mt-2 text-[14px] leading-[1.55] text-g-ink">{page.promise}</p>
 
       {page.settle ? (
         <div className="mt-5">
@@ -225,11 +225,8 @@ function Outcome({
               {page.settle.button}
             </button>
           ) : null}
-          <p className="mt-2 text-[12px] text-g-ink2">{page.settle.note}</p>
           <SendStatus state={ctx.sendState(settleKey)} tone="garden" />
         </div>
-      ) : page.pledgeWhy ? (
-        <p className="mt-3 text-[13px] text-g-ink2">{page.pledgeWhy}</p>
       ) : null}
 
       {myRow && myRow.send && ctx.account ? (
@@ -238,7 +235,6 @@ function Outcome({
           <button type="button" disabled={!ctx.maySend} onClick={() => void ctx.send(payKey, [payCall({ boomerang: config.boomerang, id, backer: ctx.account! })])} className="mt-3 h-10 rounded-[6px] border border-g-ink px-4 text-[14px] hover:bg-g-bg disabled:border-g-line disabled:text-g-ink2">
             {myRow.send.button}
           </button>
-          <p className="mt-2 text-[12px] text-g-ink2">{myRow.send.note}</p>
           <SendStatus state={ctx.sendState(payKey)} tone="garden" />
         </div>
       ) : null}
@@ -259,15 +255,25 @@ function Outcome({
               </div>
             );
           })}
-          <p className="text-[12px] text-g-ink2">{page.duesNote}</p>
         </div>
       ) : null}
-      {page.refunds && !(myRow && myRow.send && ctx.account) && !(mine && mine.cameBack) ? <p className="mt-4 text-[12px] text-g-ink2">{page.refunds}</p> : null}
       {!ctx.account ? (
         <Link href="/login" className="mt-5 inline-block text-[14px] text-g-green underline underline-offset-2">
-          Log in to act on this campaign
+          Log in
         </Link>
       ) : null}
+    </section>
+  );
+}
+
+function ExamplePanel() {
+  return (
+    <section className="rounded-[8px] border border-g-line bg-g-sheet p-6">
+      <p className="font-serif text-[24px] leading-tight">Example campaign</p>
+      <p className="mt-2 text-[14px] text-g-ink2">Pledging is open on live demo campaigns.</p>
+      <Link href="/explore" className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-[6px] bg-g-green text-[15px] font-medium text-g-sheet hover:bg-g-ink">
+        Find a live campaign →
+      </Link>
     </section>
   );
 }

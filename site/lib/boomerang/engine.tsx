@@ -26,7 +26,8 @@ import { configFrom, ConfigError, type Config } from "../../../web/src/app/confi
 import type { Ctx, RelayOutcome, SendState, SignedGuard } from "../../../web/src/app/context.ts";
 import { startPoll, type Poll, type PollHost } from "../../../web/src/app/poll.ts";
 import { campaignIn, readWorld, type World } from "../../../web/src/app/world.ts";
-import { mockWorld } from "./mock";
+import { MOCK_ACCOUNT, mockWorld } from "./mock";
+import { isShowcase, withShowcase } from "./showcase";
 
 const MOCK = process.env.NEXT_PUBLIC_MOCK === "1";
 
@@ -116,7 +117,7 @@ export function useEngine(): Engine {
 export function useShownCampaign(id: bigint | null) {
   const { show } = useEngine();
   useEffect(() => {
-    show(id);
+    show(id !== null && isShowcase(id) ? null : id);
     return () => show(null);
   }, [id, show]);
 }
@@ -321,11 +322,16 @@ function Running({ config, children }: { config: Config; children: React.ReactNo
   const poll = useRef<Poll | null>(null);
   useEffect(() => {
     if (!MOCK) return;
-    const tick = () => setWorld(mockWorld(BigInt(Math.floor(Date.now() / 1000))));
+    const signedIn = new URLSearchParams(window.location.search).has("signedin");
+    if (signedIn) {
+      setAccount(MOCK_ACCOUNT);
+      setWalletChainId(config.chain.id);
+    }
+    const tick = () => setWorld(mockWorld(BigInt(Math.floor(Date.now() / 1000)), signedIn ? MOCK_ACCOUNT : null));
     tick();
     const t = window.setInterval(tick, 1000);
     return () => window.clearInterval(t);
-  }, []);
+  }, [config]);
   useEffect(() => {
     if (MOCK) return;
     const p = startPoll({
@@ -566,13 +572,14 @@ function Running({ config, children }: { config: Config; children: React.ReactNo
   const deskUp = world !== null && world.keeper.up && world.keeper.health.desk !== null;
   const practiceOffered = looked && account === null && (deskUp || practiceStore.get() !== null);
 
+  const shown = world === null ? null : withShowcase(world);
   const ctx: Ctx | null =
-    world === null
+    world === null || shown === null
       ? null
       : {
           config,
-          world,
-          labels,
+          world: shown.world,
+          labels: [...labels, ...shown.labels],
           desk: world.keeper.up ? world.keeper.health.desk : null,
           relay: world.keeper.up ? world.keeper.health.relay : null,
           account,

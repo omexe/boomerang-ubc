@@ -6,10 +6,11 @@ import { useState } from "react";
 
 import { phaseOf, type Phase } from "../../../../web/src/data/campaign.ts";
 import type { CampaignView } from "../../../../web/src/data/load.ts";
-import { formatUsd } from "../../../../web/src/data/money.ts";
 import { campaignPage } from "../../../../web/src/views/campaign.ts";
 import { AppHeader } from "@/components/app/AppHeader";
+import { Breadcrumbs } from "@/components/app/Breadcrumbs";
 import { useEngine } from "@/lib/boomerang/engine";
+import { isShowcase } from "@/lib/boomerang/showcase";
 
 const TAG: Record<Phase, string> = {
   early: "border-glow text-glow",
@@ -63,17 +64,12 @@ export default function ExplorePage() {
   return (
     <div className="min-h-screen bg-charcoal">
       <AppHeader tone="dark" />
-      <main className="mx-auto max-w-[1240px] px-6 pb-24 pt-12">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <h1 className="font-serif text-[48px] leading-[1.05] text-paper">Explore campaigns</h1>
-            <p className="mt-3 text-[16px] text-paper">
-              {world.count.toString()} campaigns on Arc Testnet. Every figure is read from the contract.
-            </p>
-          </div>
+      <main className="mx-auto max-w-[1240px] px-6 pb-24 pt-8">
+        <Breadcrumbs items={[{ label: "Explore" }]} tone="dark" />
+        <div className="mt-10 flex flex-wrap items-end justify-between gap-6">
+          <h1 className="font-serif text-[48px] leading-[1.05] text-paper">Explore campaigns</h1>
           {canDemo ? (
-            <div className="flex flex-col items-end gap-2">
-              <button
+            <button
                 type="button"
                 onClick={() => startDemo("two")}
                 disabled={desk.busy}
@@ -81,17 +77,13 @@ export default function ExplorePage() {
               >
                 {desk.busy ? "Opening…" : "Start a 2-minute demo campaign"} <span aria-hidden>→</span>
               </button>
-              <button type="button" onClick={() => startDemo("ten")} disabled={desk.busy} className="text-[13px] text-mist hover:text-paper">
-                or a 10-minute one
-              </button>
-            </div>
           ) : null}
         </div>
         {desk.line && !desk.ok ? <p className="mt-4 rounded-[6px] border border-missed px-4 py-3 text-[14px] text-missed">{desk.line}</p> : null}
 
-        <Section title="Live now" empty={canDemo ? "Nothing is taking pledges right now. Start a demo campaign to watch one run." : "Nothing is taking pledges right now."} items={live} ctx={ctx} />
+        <Section title="Live now" empty="Nothing live right now." items={live} ctx={ctx} />
         {soon.length > 0 ? <Section title="Opening soon" items={soon} ctx={ctx} /> : null}
-        <Section title="Settled" empty="No campaign has settled yet." items={settled} ctx={ctx} />
+        <Section title="Settled" empty="None yet." items={settled} ctx={ctx} />
       </main>
     </div>
   );
@@ -129,7 +121,10 @@ function Card({ c, ctx }: { c: CampaignView; ctx: NonNullable<ReturnType<typeof 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/island.png" alt="" className="pixelated h-12 w-14 shrink-0 object-contain" />
       </div>
-      <span className={`mt-4 self-start rounded-[4px] border px-2 py-0.5 text-[12px] ${TAG[page.phase]}`}>{page.status}</span>
+      <div className="mt-4 flex gap-2">
+        <span className={`rounded-[4px] border px-2 py-0.5 text-[12px] ${TAG[page.phase]}`}>{page.status}</span>
+        {isShowcase(c.id) ? <span className="rounded-[4px] border border-line px-2 py-0.5 text-[12px] text-mist">Example</span> : null}
+      </div>
       <div className="mt-5 flex items-baseline justify-between font-mono text-[13px]">
         <span className="text-paper">{page.raised}</span>
         <span className="text-mist">{page.percent}%</span>
@@ -138,9 +133,7 @@ function Card({ c, ctx }: { c: CampaignView; ctx: NonNullable<ReturnType<typeof 
         <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
       </div>
       <p className="mt-4 text-[13px] text-paper">{page.clock}</p>
-      <p className="mt-1 text-[13px] text-mist">
-        {formatUsd(c.terms.matchAmount)} USDC match · {formatUsd(c.terms.bonusPool)} USDC bonus
-      </p>
+
     </Link>
   );
 }

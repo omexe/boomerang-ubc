@@ -47,9 +47,9 @@ export function AppHeader({ tone }: { tone: Tone }) {
               <Link href="/explore" className="hover:underline">
                 Explore
               </Link>
-              <span className={sub} title="Coming in the next set of pages">
+              <Link href="/pledges" className="hover:underline">
                 My pledges
-              </span>
+              </Link>
             </nav>
           </div>
 
@@ -73,14 +73,13 @@ export function AppHeader({ tone }: { tone: Tone }) {
                 </button>
                 {open ? (
                   <div className={`absolute right-0 top-11 w-[300px] rounded-[6px] border p-4 text-[14px] shadow-xl ${panel} ${text}`}>
-                    <p className={sub}>{wallet.practising ? "Practice wallet: a key kept in this browser, for test money only." : "Your own wallet."}</p>
+                    <p className={sub}>{wallet.practising ? "Practice wallet" : "Your wallet"}</p>
                     <p className="mt-2 break-all font-mono text-[12px]">{wallet.account}</p>
                     {offer ? (
                       <div className="mt-4">
                         <button type="button" onClick={getUsdc} disabled={desk.busy} className={`w-full rounded-[5px] border px-3 py-2 text-left ${line}`}>
                           {offer.button}
                         </button>
-                        <p className={`mt-1 text-[12px] ${sub}`}>{offer.note}</p>
                       </div>
                     ) : null}
                     {desk.line ? <p className={`mt-2 text-[13px] ${desk.ok ? "" : dark ? "text-missed" : "text-g-red"}`}>{desk.line}</p> : null}
@@ -95,6 +94,9 @@ export function AppHeader({ tone }: { tone: Tone }) {
                           Use a practice wallet
                         </button>
                       ) : null}
+                      <Link href="/pledges" className="hover:underline" onClick={() => setOpen(false)}>
+                        My pledges
+                      </Link>
                       <Link href="/login" className="hover:underline" onClick={() => setOpen(false)}>
                         Switch role
                       </Link>

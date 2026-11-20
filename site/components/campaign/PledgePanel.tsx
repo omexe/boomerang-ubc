@@ -12,20 +12,13 @@ import { quotePledge } from "../../../web/src/data/campaign.ts";
 import type { CampaignView } from "../../../web/src/data/load.ts";
 import { formatUsd, parseUsd } from "../../../web/src/data/money.ts";
 import { oneAtATime } from "../../../web/src/flows/calls.ts";
-import { boardTime } from "../../../web/src/views/board.ts";
 import { pledgeForm, pledgeRoute, requote, stillValidLine, type Answer } from "../../../web/src/views/pledge.ts";
-import { PRACTICE } from "../../../web/src/views/practice.ts";
 import { receiptView, shownWhileSending } from "../../../web/src/views/receipt.ts";
 import { deskAnswerFor, deskOffer, signedButton, WORDS } from "../../../web/src/views/shell.ts";
 import { SendStatus } from "@/components/app/ui";
 
 const GAS_RESERVE = 20_000n; // about what an approval and a pledge cost in USDC gas on Arc
 const PICKS = ["0.50", "1", "2"];
-
-function span(seconds: bigint): string {
-  const t = boardTime(seconds);
-  return t.unit === "min" ? t.figure : `${t.figure} ${t.unit}`;
-}
 
 export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campaign: CampaignView; focus: boolean; onLogin: () => void }) {
   const { world, config } = ctx;
@@ -147,9 +140,6 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
   };
 
   const t = campaign.terms;
-  const opens = world.now < t.opensAt;
-  const early = world.now < t.earlyUntil && t.bonusPool > 0n;
-  const clock = opens ? `Opens in ${span(t.opensAt - world.now)}` : early ? `Early bonus ends in ${span(t.earlyUntil - world.now)}` : `Closes in ${span(t.closesAt - world.now)}`;
   const others = busy && !held ? [] : form.blocks.filter((b) => b !== form.line);
   const button = ctx.account === null ? "Log in to pledge" : route === "signed" ? signedButton(form.button) : form.button;
   const deskLine = deskAnswerFor({ line: desk.line, askedBy: desk.askedBy as never, account: ctx.account });
@@ -168,7 +158,6 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
         <h2 id="pledge-title" className="font-serif text-[26px] leading-tight text-g-ink">
           Pledge
         </h2>
-        <span className={`text-[13px] ${early ? "text-g-gold" : "text-g-ink2"}`}>{clock}</span>
       </div>
 
       {/* amount */}
@@ -204,18 +193,15 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
             <div className="rounded-[6px] border border-g-line p-3">
               <p className="text-[12px] text-g-ink2">If the goal is met</p>
               <p className="mt-1 font-serif text-[22px] text-g-green">{receipt.met.figure.replace(/ USDC$/, "")}</p>
-              <p className="mt-1 text-[12px] leading-[1.45] text-g-ink">{receipt.met.line}</p>
             </div>
             <div className={`rounded-[6px] border p-3 ${receipt.missed.live ? "border-g-gold" : "border-g-line"}`}>
               <p className="text-[12px] text-g-ink2">If it misses</p>
               <p className="mt-1 font-serif text-[22px] text-g-red">{receipt.missed.figure.replace(/ USDC$/, "")}</p>
-              <p className="mt-1 text-[12px] leading-[1.45] text-g-ink">{receipt.missed.line}</p>
             </div>
           </div>
         ) : (
           <p className="text-[14px] text-g-ink">{receipt.line}</p>
         )}
-        {form.source === "contract" ? <p className="mt-2 text-[12px] text-g-ink2">The contract&apos;s own answer for this amount, read just now.</p> : form.source === "estimate" ? <p className="mt-2 text-[12px] text-g-ink2">Worked out from the contract&apos;s rules while the contract is asked.</p> : null}
       </div>
 
       {/* where the money comes from */}
@@ -238,7 +224,6 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
       >
         {button} <span aria-hidden>→</span>
       </button>
-      {route === "signed" && ctx.account !== null ? <p className="mt-2 text-center text-[12px] text-g-ink2">{ctx.practising ? PRACTICE.oneSignature : WORDS.pledge.oneSignature}</p> : null}
 
       <div className="mt-3 space-y-2 text-[13px] leading-[1.5]">
         {changed ? <p className="text-g-red" role="alert">{changed}</p> : null}
@@ -258,7 +243,6 @@ export function PledgePanel({ ctx, campaign, focus, onLogin }: { ctx: Ctx; campa
                 <button type="button" onClick={getUsdc} disabled={desk.busy || busy} className="text-[13px] font-medium text-g-green underline underline-offset-2">
                   {offer.button}
                 </button>
-                <p className="mt-1 text-[12px] text-g-ink2">{offer.note}</p>
               </>
             ) : null}
             {deskLine ? <p className={desk.ok ? "text-g-ink" : "text-g-red"}>{deskLine}</p> : null}

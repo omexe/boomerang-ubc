@@ -40,7 +40,9 @@ function campaign(id: bigint, now: bigint, o: { open: bigint; early: bigint; clo
   };
 }
 
-export function mockWorld(now: bigint): World {
+export const MOCK_ACCOUNT = "0x45b7000000000000000000000000000000ef8c" as `0x${string}`;
+
+export function mockWorld(now: bigint, account: `0x${string}` | null = null): World {
   const campaigns = [
     campaign(14n, now, { open: -300n, early: 900n, close: 3600n, target: 40_000n * U, pledged: 15_600n * U, early$: 15_600n * U, backers: 78, outcome: 0 }),
     campaign(13n, now, { open: -3000n, early: -1200n, close: 1800n, target: 12_000n * U, pledged: 9_400n * U, early$: 6_100n * U, backers: 41, outcome: 0 }),
@@ -54,10 +56,16 @@ export function mockWorld(now: bigint): World {
     campaigns,
     extra: null,
     custody: { block: 72_900_000n, time: now, held: 0n, owed: 0n, events: 0n, ok: true },
-    account: null,
-    mine: [],
-    balance: null,
-    allowance: null,
+    account,
+    mine: account
+      ? [
+          { campaign: campaigns[0], backer: { principal: 2n * U, weighted: U, payTo: account, paid: false }, owed: { principal: 0n, bonus: 0n }, ifMissed: { principal: 2n * U, bonus: U / 10n } },
+          { campaign: campaigns[2], backer: { principal: 1n * U, weighted: U / 2n, payTo: account, paid: false }, owed: { principal: 0n, bonus: 0n }, ifMissed: { principal: 0n, bonus: 0n } },
+          { campaign: campaigns[3], backer: { principal: 3n * U / 2n, weighted: U, payTo: account, paid: false }, owed: { principal: 3n * U / 2n, bonus: U / 20n }, ifMissed: { principal: 0n, bonus: 0n } },
+        ]
+      : [],
+    balance: account ? 1_800_000n : null,
+    allowance: account ? 0n : null,
     keeper: { up: false, why: "none" },
     backerChecks: null,
     backerTotal: 0,
