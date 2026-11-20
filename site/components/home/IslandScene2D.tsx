@@ -20,15 +20,39 @@ const LEG_L = { x: 16, y: 58, w: 12, h: 9 };
 const LEG_R = { x: 28, y: 58, w: 12, h: 9 };
 const STRIDE = 7; // island-image pixels per half step
 
-// Walkable spots on the island image (paths, lawns, meadow), in image pixels.
-const SPOTS: [number, number][] = [
-  [235, 345], [300, 352], [365, 365], [430, 348], [472, 272], [522, 300], [602, 266],
-  [642, 300], [690, 362], [760, 420], [818, 452], [858, 470], [560, 372], [622, 420],
-  [700, 452], [762, 500], [822, 522], [472, 470], [522, 442], [582, 470], [422, 432],
-  [202, 430], [262, 410], [242, 462], [302, 520], [362, 546], [440, 560], [512, 540],
-  [590, 560], [652, 590], [702, 560], [762, 602], [422, 642], [482, 690], [562, 662],
-  [622, 622], [382, 602],
+// Footpaths on the island image as a graph: gardeners only ever walk along
+// these edges, so they stay on the stepping stones and dirt paths.
+const NODES: [number, number][] = [
+  [222, 352], [262, 360], [302, 346], [340, 332], [378, 322], // 0-4 greenhouse path
+  [548, 300], [585, 312], [625, 356], [668, 378], [712, 390], // 5-9 terrace foot, pond bridge, gazebo path
+  [745, 420], [790, 440], [835, 462], [870, 478], // 10-13 toward the shed
+  [700, 456], [662, 505], [620, 535], [575, 545], [535, 560], // 14-18 stairs down, lower stones
+  [505, 568], [470, 548], [440, 522], [410, 496], // 19-22 stream bridge, front meadow, meadow stairs
+  [640, 590], [690, 605], [600, 598], // 23-25 lower right stones
+  [460, 276], // 26 little bridge by the waterfall
+  [190, 415], [240, 440], // 27-28 between the vegetable beds
+  [725, 562], // 29 beside the pergola
+  [637, 557], // 30 gap beside the bench
 ];
+const EDGES: [number, number][] = [
+  [0, 1], [1, 2], [2, 3], [3, 4], [4, 26], [26, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10],
+  [10, 11], [11, 12], [12, 13], [10, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19],
+  [19, 20], [20, 21], [21, 22], [16, 30], [30, 23], [23, 24], [23, 25], [0, 27], [27, 28],
+  [24, 29],
+];
+// the first two gardeners keep to the front meadow, where "nobody wants to
+// go first" happens, so they are already there when that section arrives
+const MEADOW = new Set([15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 30]);
+const NEIGHBOURS: number[][] = NODES.map((_, i) =>
+  EDGES.flatMap(([a, b]) => (a === i ? [b] : b === i ? [a] : [])),
+);
+
+// How many gardeners are out: a couple at the start, a dozen at the goal.
+// gardeners = 2 + round(10 × raised ÷ goal), capped at 12.
+const MIN_GARDENERS = 2;
+export function gardenersFor(progress: number) {
+  return Math.min(GARDENERS, MIN_GARDENERS + Math.round((GARDENERS - MIN_GARDENERS) * Math.min(Math.max(progress, 0), 1)));
+}
 
 // Camera per section: focus point on the image and zoom (1 = whole island).
 const CAM: { x: number; y: number; z: number }[] = [
@@ -66,6 +90,8 @@ function camAt(p: number) {
 type G = {
   x: number;
   y: number;
+  at: number; // node it is walking from
+  to: number; // node it is walking to
   tx: number;
   ty: number;
   wait: number;
@@ -92,25 +118,44 @@ export default function IslandScene2D() {
   );
 
   useEffect(() => {
-    story.note = "";
     let seed = 7;
     const rand = () => {
       seed = (seed * 1664525 + 1013904223) >>> 0;
       return seed / 4294967296;
     };
+    story.note = "Gardeners grow as the campaign fills: 2 at the start, 12 at the goal.";
     const gs: G[] = Array.from({ length: GARDENERS }, (_, i) => {
-      const [x, y] = SPOTS[Math.floor(rand() * SPOTS.length)];
-      return { x, y, tx: x, ty: y, wait: rand() * 2, speed: 11 + rand() * 5, face: 1, shown: 0, token: 0, phase: 0, ...gEls.current[i] };
+      const meadow = [...MEADOW];
+      const n = i < MIN_GARDENERS ? meadow[Math.floor(rand() * meadow.length)] : Math.floor(rand() * NODES.length);
+      const [x, y] = NODES[n];
+      return { x, y, at: n, to: n, tx: x, ty: y, wait: rand() * 2, speed: 11 + rand() * 5, face: 1, shown: 0, token: 0, phase: 0, ...gEls.current[i] };
     });
 
-    const pickTarget = (g: G, focus: { x: number; y: number; z: number }) => {
-      // prefer spots inside the current view so the camera always has company
-      const radius = 520 / focus.z;
-      const near = SPOTS.filter(([x, y]) => Math.hypot(x - focus.x, y - focus.y) < radius && Math.hypot(x - g.x, y - g.y) < 260);
-      const pool = near.length ? near : SPOTS.filter(([x, y]) => Math.hypot(x - g.x, y - g.y) < 200);
-      const [x, y] = (pool.length ? pool : SPOTS)[Math.floor(rand() * (pool.length || SPOTS.length))];
-      g.tx = x + (rand() - 0.5) * 16;
-      g.ty = y + (rand() - 0.5) * 10;
+    // step to a neighbouring node, leaning toward what the camera is looking at
+    const pickTarget = (g: G, focus: { x: number; y: number; z: number }, homebody: boolean) => {
+      const here = g.to;
+      const allowed = NEIGHBOURS[here].filter((n) => !homebody || MEADOW.has(n));
+      let options = allowed.filter((n) => n !== g.at);
+      if (!options.length) options = allowed.length ? allowed : NEIGHBOURS[here];
+      const weights = options.map((n) => {
+        const [x, y] = NODES[n];
+        const dist = Math.hypot(x - focus.x, y - focus.y);
+        return 1 / (1 + (dist * focus.z) / 140) ** 2;
+      });
+      const total = weights.reduce((a, b) => a + b, 0);
+      let r = rand() * total;
+      let next = options[0];
+      for (let k = 0; k < options.length; k++) {
+        r -= weights[k];
+        if (r <= 0) {
+          next = options[k];
+          break;
+        }
+      }
+      g.at = here;
+      g.to = next;
+      g.tx = NODES[next][0] + (rand() - 0.5) * 6;
+      g.ty = NODES[next][1] + (rand() - 0.5) * 4;
     };
 
     let raf = 0;
@@ -144,19 +189,24 @@ export default function IslandScene2D() {
       });
 
       // how many gardeners are out
-      const fill = s.early * 0.6 + s.late * 0.4;
-      const active = s.hesitate > 0.5 ? 1 : Math.round(3 + fill * (GARDENERS - 3));
+      const progress = (s.early * EARLY_COUNT + s.late * (PILGRIMS - EARLY_COUNT)) / PILGRIMS;
+      const active = gardenersFor(Math.max(progress, s.met));
       const goneHome = s.missed > 0.5;
 
       gs.forEach((g, i) => {
         const on = i < active;
         g.shown += ((on ? 1 : 0) - g.shown) * (1 - Math.exp(-dt * 5));
 
-        if (i === 0 && s.hesitate > 0.5) {
-          // the one who almost goes first: steps toward the gate, then back
-          const k = 0.5 + 0.5 * Math.sin(t * 0.9);
-          g.tx = 440 + k * 60;
-          g.ty = 640 - k * 30;
+        const hesitating = i < MIN_GARDENERS && s.hesitate > 0.5;
+        if (hesitating) {
+          // nobody wants to go first: both edge toward the bridge, then back off
+          const k = 0.5 + 0.5 * Math.sin(t * 0.8 + i * 2.4);
+          const [ax, ay] = NODES[i === 0 ? 21 : 18];
+          const [bx, by] = NODES[19];
+          g.tx = ax + (bx - ax) * k * 0.6;
+          g.ty = ay + (by - ay) * k * 0.6;
+          g.at = i === 0 ? 21 : 18;
+          g.to = g.at;
         }
 
         const dx = g.tx - g.x;
@@ -172,11 +222,12 @@ export default function IslandScene2D() {
           // only turn around on a clear sideways move, so they don't flicker
           if (Math.abs(dx) / d > 0.35) g.face = dx > 0 ? -1 : 1;
           moving = true;
-        } else if (!(i === 0 && s.hesitate > 0.5)) {
+        } else if (!hesitating) {
           g.wait -= dt;
           if (g.wait <= 0) {
-            pickTarget(g, cam);
-            g.wait = 2 + rand() * 4;
+            pickTarget(g, cam, i < MIN_GARDENERS);
+            // stroll through path bends, linger at ends and junctions
+            g.wait = NEIGHBOURS[g.to].length === 2 ? 0.1 + rand() * 0.6 : 1.5 + rand() * 3.5;
           }
         }
         if (!moving) {
