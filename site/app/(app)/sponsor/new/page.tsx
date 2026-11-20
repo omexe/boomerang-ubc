@@ -3,7 +3,7 @@
 // Create a campaign: name, who is paid, the goal, the two pots and how long it runs. The terms
 // go to the contract in one transaction; the pots are locked on the next screen, before it opens.
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import type { Address, Terms } from "../../../../../packages/kit/src/index.ts";
 import { formatUsd, parseUsd } from "../../../../../web/src/data/money.ts";
@@ -11,7 +11,7 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { Breadcrumbs } from "@/components/app/Breadcrumbs";
 import { SendStatus } from "@/components/app/ui";
 import { useEngine } from "@/lib/boomerang/engine";
-import { createCall } from "@/lib/boomerang/sponsor";
+import { createCall, lockCalls } from "@/lib/boomerang/sponsor";
 
 const LENGTHS = [
   { key: "10m", label: "10 min", secs: 600n },
@@ -19,11 +19,11 @@ const LENGTHS = [
   { key: "7d", label: "7 days", secs: 604_800n },
   { key: "30d", label: "30 days", secs: 2_592_000n },
 ] as const;
-const LEAD = 180n; // seconds before opening, to lock the pots
+const LEAD = 300n; // seconds before opening, to lock the pots
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 
 export default function NewCampaignPage() {
-  const { ctx, wallet, nameCampaign } = useEngine();
+  const { ctx, wallet, nameCampaign, findCreated } = useEngine();
   const router = useRouter();
   const [name, setName] = useState("");
   const [recipient, setRecipient] = useState("");
@@ -33,20 +33,13 @@ export default function NewCampaignPage() {
   const [min, setMin] = useState("0.10");
   const [rate, setRate] = useState("20");
   const [length, setLength] = useState<(typeof LENGTHS)[number]["key"]>("10m");
-  const [sentFor, setSentFor] = useState<{ opensAt: bigint; target: bigint; recipient: Address; title: string } | null>(null);
+  // create → find it on the contract → lock both pots → its page
+  const [phase, setPhase] = useState<"form" | "finding" | "locking" | "lost">("form");
+  const [lockKey, setLockKey] = useState<string | null>(null);
 
   const key = "create";
   const sending = ctx?.sendState(key) ?? null;
-
-  // once the new campaign shows up in a read, name it and go to its page
-  useEffect(() => {
-    if (!ctx || !sentFor || !wallet.account) return;
-    const me = wallet.account.toLowerCase();
-    const made = ctx.world.campaigns.find((c) => c.state.sponsor.toLowerCase() === me && c.terms.opensAt === sentFor.opensAt && c.terms.target === sentFor.target);
-    if (!made) return;
-    if (sentFor.title.trim()) nameCampaign({ id: made.id, sponsor: wallet.account, recipient: sentFor.recipient, title: sentFor.title.trim() });
-    router.push(`/sponsor/${made.id}`);
-  }, [ctx, sentFor, wallet.account, nameCampaign, router]);
+  const locking = lockKey ? (ctx?.sendState(lockKey) ?? null) : null;
 
   const g = parseUsd(goal);
   const m = parseUsd(match);
@@ -66,7 +59,8 @@ export default function NewCampaignPage() {
   const submit = async () => {
     if (!ctx || problems.length > 0 || g === null || m === null || b === null || mn === null) return;
     const span = LENGTHS.find((l) => l.key === length)!.secs;
-    const opensAt = ctx.world.now + LEAD;
+    const wall = BigInt(Math.floor(Date.now() / 1000));
+    const opensAt = (ctx.world.now > wall ? ctx.world.now : wall) + LEAD;
     const terms: Terms = {
       recipient: recipient as Address,
       opensAt,
@@ -81,8 +75,30 @@ export default function NewCampaignPage() {
       bonusFromRecipient: false,
     };
     const ok = await ctx.send(key, [createCall({ boomerang: ctx.config.boomerang, terms })]);
-    if (ok) setSentFor({ opensAt, target: g, recipient: recipient as Address, title: name });
+    if (!ok || !wallet.account) return;
+    setPhase("finding");
+    let made: { id: bigint; allowance: bigint } | null = null;
+    for (let i = 0; i < 20 && made === null; i += 1) {
+      try {
+        made = await findCreated({ opensAt, target: g });
+      } catch {
+        made = null;
+      }
+      if (made === null) await new Promise((r) => setTimeout(r, 2000));
+    }
+    if (made === null) return setPhase("lost");
+    if (name.trim()) nameCampaign({ id: made.id, sponsor: wallet.account, recipient: recipient as Address, title: name.trim() });
+    const calls = lockCalls({ boomerang: ctx.config.boomerang, usdc: ctx.config.usdc, id: made.id, match: m > 0n ? m : null, bonus: b > 0n ? b : null, allowance: made.allowance });
+    if (calls.length > 0) {
+      const k = `lock:${made.id}`;
+      setLockKey(k);
+      setPhase("locking");
+      await ctx.send(k, calls);
+    }
+    router.push(`/sponsor/${made.id}`);
   };
+
+  const label = phase === "finding" ? "Created. Finding it…" : phase === "locking" ? "Locking the pots…" : phase === "lost" ? "Created" : "Create campaign";
 
   return (
     <div className="min-h-screen bg-charcoal">
@@ -152,19 +168,21 @@ export default function NewCampaignPage() {
               <dl className="space-y-4 border-y border-line py-5">
                 <Stat label="Goal" value={g === null ? "—" : `${formatUsd(g)} USDC`} />
                 <Stat label="You lock" value={`${formatUsd(lock)} USDC`} />
-                <Stat label="Opens" value="In 3 min" />
+                <Stat label="Opens" value="In 5 min" />
                 <Stat label="Early window" value="First 40%" />
               </dl>
               {short ? <p className="mt-4 text-[13px] text-missed">Your balance is below what you lock.</p> : null}
               <button
                 type="submit"
-                disabled={problems.length > 0 || !ctx?.maySend || sending?.busy || sentFor !== null}
+                disabled={problems.length > 0 || !ctx?.maySend || sending?.busy || phase !== "form"}
                 className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-[5px] bg-paper text-[15px] font-medium text-ink hover:bg-glow disabled:bg-line disabled:text-mist"
               >
-                {sentFor ? "Created. Opening…" : "Create campaign"} <span aria-hidden>→</span>
+                {label} <span aria-hidden>→</span>
               </button>
               {problems.length > 0 ? <p className="mt-3 text-[13px] text-mist">Check: {problems.join(", ")}</p> : null}
               <SendStatus state={sending} tone="dark" />
+              {locking ? <SendStatus state={locking} tone="dark" /> : null}
+              {phase === "lost" ? <p className="mt-3 text-[13px] text-missed">Created, but not found yet. Open Sponsor to lock its pots.</p> : null}
             </aside>
           </form>
         )}

@@ -8,7 +8,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createWalletClient, custom, type Abi } from "viem";
 
-import { authorizationStateAbi, boomerangAbi, type Address } from "../../../packages/kit/src/index.ts";
+import { authorizationStateAbi, boomerangAbi, reader, type Address } from "../../../packages/kit/src/index.ts";
 import { askForCampaign, askForUsdc, askKeeper, askRelay, type Fetch } from "../../../web/src/data/ask.ts";
 import { explain } from "../../../web/src/data/errors.ts";
 import { readLabels, type Label } from "../../../web/src/data/labels.ts";
@@ -106,6 +106,8 @@ export type Engine = {
   show(id: bigint | null): void;
   /** Name a campaign this browser's sponsor made. */
   nameCampaign(l: { id: bigint; sponsor: Address; recipient: Address; title: string }): void;
+  /** Find, straight from the contract, the campaign this account just created with these times; with the allowance it has given. */
+  findCreated(o: { opensAt: bigint; target: bigint }): Promise<{ id: bigint; allowance: bigint } | null>;
 };
 
 const EngineContext = createContext<Engine | null>(null);
@@ -168,6 +170,7 @@ function stoppedEngine(problem: string | null): Engine {
     setRole: noop,
     show: noop,
     nameCampaign: noop,
+    findCreated: async () => null,
   };
 }
 
@@ -579,6 +582,30 @@ function Running({ config, children }: { config: Config; children: React.ReactNo
     [client, config],
   );
 
+  // Read the contract directly, so a slow or failed world read cannot hold up a new campaign.
+  const findCreated = useCallback(
+    async (o: { opensAt: bigint; target: bigint }) => {
+      if (!account) return null;
+      const r = reader(client, config.boomerang);
+      const count = await r.campaignCount();
+      const me = account.toLowerCase();
+      for (let id = count; id >= 1n && id > count - 12n; id -= 1n) {
+        const [t, st] = await Promise.all([r.termsOf(id), r.stateOf(id)]);
+        if (st.sponsor.toLowerCase() === me && t.opensAt === o.opensAt && t.target === o.target) {
+          const allowance = (await client.readContract({
+            address: config.usdc,
+            abi: [{ type: "function", name: "allowance", stateMutability: "view", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ type: "uint256" }] }],
+            functionName: "allowance",
+            args: [account, config.boomerang],
+          })) as bigint;
+          return { id, allowance };
+        }
+      }
+      return null;
+    },
+    [account, client, config],
+  );
+
   const deskUp = world !== null && world.keeper.up && world.keeper.health.desk !== null;
   const practiceOffered = looked && account === null && (deskUp || practiceStore.get() !== null);
 
@@ -648,6 +675,7 @@ function Running({ config, children }: { config: Config; children: React.ReactNo
     setRole,
     show,
     nameCampaign,
+    findCreated,
   };
 
   return <EngineContext.Provider value={engine}>{children}</EngineContext.Provider>;
