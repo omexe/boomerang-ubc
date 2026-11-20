@@ -1,0 +1,138 @@
+/* The landing page. Every rule is scoped under .landing: other pages use class names like .board
+   and .pledges for different things, so nothing here may apply outside the landing page. Colours,
+   curves, gutters and faces come from the tokens in world.css; the cheque's own rules (.cheque,
+   .cq-*, .fill, .ifmiss) live in cheque.css and the flight scene's (.scene, .pin, .caps, .cap) in
+   scene.css, so neither is repeated here. Values are the approved mockup's. */
+
+/* Hero: a Z. Headline top left, the flight top right, the cheque bottom left, the flight's caption
+   bottom right. */
+.landing .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); align-items: start; padding-block: clamp(36px, 7vh, 88px) clamp(24px, 5vh, 56px); }
+.landing h1 { font-family: var(--display); font-variation-settings: "opsz" 144, "SOFT" 30; font-weight: 600; font-size: clamp(2.8rem, 1.4rem + 4.1vw, 5.6rem); line-height: 0.96; letter-spacing: -0.035em; margin: 0 0 22px; }
+.landing h1 .line { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.landing h1 .line > span { display: block; }
+.landing h1 em { font-style: italic; font-weight: 500; color: var(--ink-2); }
+.landing .lede { font-size: clamp(1.05rem, 0.98rem + 0.3vw, 1.2rem); line-height: 1.55; max-width: 31em; margin: 0 0 30px; color: var(--ink-2); }
+
+/* The cheque wrapper is ours, so the arrival animation has a stable node and the phone order and
+   width sit on it rather than on the cheque, which cheque.css owns. */
+.landing .hero-cheque { margin: 0 0 18px; }
+
+.landing .trust { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 18px; font-size: 0.84rem; color: var(--ink-soft); }
+.landing .trust span { display: inline-flex; align-items: center; gap: 7px; }
+.landing .trust svg { width: 14px; height: 14px; flex: none; }
+
+/* Sections */
+.landing section { padding-block: clamp(72px, 11vw, 148px) 0; }
+.landing #how { padding-top: clamp(40px, 6vw, 80px); }
+.landing h2 { font-family: var(--display); font-variation-settings: "opsz" 120, "SOFT" 30; font-weight: 600; font-size: clamp(2rem, 1.3rem + 2.6vw, 3.6rem); letter-spacing: -0.03em; line-height: 1; margin: 0 0 16px; max-width: 16ch; text-wrap: balance; }
+.landing h2 em { font-style: italic; font-weight: 500; }
+.landing .sub { font-size: 1.08rem; line-height: 1.55; max-width: 36em; margin: 0; color: var(--ink-2); }
+
+/* How it works: pinned. Steps on the left, one board on the right that changes in place. */
+.landing .how { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 80px); align-items: center; min-height: 100svh; padding-block: 40px; }
+.landing .steps { list-style: none; margin: 34px 0 0; padding: 0; display: grid; gap: 4px; counter-reset: s; }
+.landing .steps li { position: relative; padding: 14px 0 14px 46px; opacity: 0.55; transition: opacity 400ms var(--ease); }
+.landing .steps li::before { counter-increment: s; content: counter(s); position: absolute; left: 0; top: 14px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 0.82rem; font-weight: 600; box-shadow: inset 0 0 0 1.5px currentColor; }
+.landing .steps li.on { opacity: 1; }
+.landing .steps li.on::before { background: var(--ink); color: var(--sheet); box-shadow: none; }
+.landing .steps li.on.miss::before { background: var(--verm); }
+.landing .steps h3 { font-family: var(--display); font-weight: 650; font-size: 1.25rem; margin: 2px 0 4px; letter-spacing: -0.01em; }
+.landing .steps p { margin: 0; line-height: 1.5; color: var(--ink-2); max-width: 30em; }
+
+.landing .board { position: relative; background: var(--sheet); border-radius: 12px; padding: clamp(22px, 2.6vw, 34px); box-shadow: 0 1px 2px rgba(18, 57, 44, 0.06), 0 30px 60px -36px rgba(18, 57, 44, 0.5); overflow: hidden; }
+.landing .board-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.landing .board-head h4 { font-family: var(--display); font-weight: 650; font-size: 1.25rem; margin: 0; }
+.landing .board-head span { font-size: 0.85rem; color: var(--ink-soft); }
+.landing .pots { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+.landing .pot { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 8px; background: color-mix(in srgb, var(--paper) 70%, var(--sheet)); }
+.landing .seal { flex: none; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.95rem; font-variant-numeric: tabular-nums; color: var(--sheet); background: var(--ink); box-shadow: 0 0 0 3px var(--sheet), 0 0 0 4.5px var(--ink); }
+.landing .pot.bonus .seal { background: var(--verm); box-shadow: 0 0 0 3px var(--sheet), 0 0 0 4.5px var(--verm); }
+.landing .pot b { display: block; font-weight: 600; }
+.landing .pot span { font-size: 0.85rem; color: var(--ink-soft); line-height: 1.35; }
+.landing .meter { margin-top: 22px; }
+.landing .meter-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.85rem; color: var(--ink-soft); }
+.landing .meter-row b { font-size: 1.6rem; color: var(--ink); font-weight: 600; letter-spacing: -0.01em; }
+.landing .bar { position: relative; height: 10px; margin-top: 8px; border-radius: 99px; background: var(--rule); overflow: hidden; }
+.landing .bar i { position: absolute; inset: 0; transform-origin: left; transform: scaleX(0); background: var(--ink); border-radius: 99px; }
+.landing .pledges { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 8px; min-height: 108px; max-width: 60%; align-content: start; }
+.landing .pledges li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 6px; background: var(--paper); font-size: 0.92rem; }
+.landing .pledges .tagx { font-size: 0.75rem; font-weight: 600; color: var(--ink-2); padding: 2px 8px; border-radius: 99px; box-shadow: inset 0 0 0 1px var(--guil); margin-left: 8px; }
+.landing .stamp { position: absolute; right: 26px; bottom: 26px; padding: 10px 16px; border: 3px solid currentColor; border-radius: 8px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 1.1rem; rotate: -8deg; mix-blend-mode: multiply; background: color-mix(in srgb, var(--sheet) 50%, transparent); opacity: 0; }
+.landing .stamp small { display: block; font-size: 0.72rem; letter-spacing: 0.02em; text-transform: none; font-weight: 600; }
+.landing .stamp.cleared { color: var(--ink); }
+.landing .stamp.returned { color: var(--verm); }
+
+/* Ledger: real campaigns. */
+.landing .ledger { margin-top: 40px; border-top: 1.5px solid var(--ink); }
+.landing .lrow { display: grid; grid-template-columns: 2fr 1.2fr 0.8fr 1fr 1.4fr; gap: 16px; align-items: center; padding: 20px 4px; border-bottom: 1px solid var(--rule); transition: background-color 240ms var(--ease); }
+.landing .lrow:hover { background: color-mix(in srgb, var(--sheet) 70%, transparent); }
+.landing .lrow.headrow { padding-block: 10px; font-size: 0.8rem; color: var(--ink-soft); }
+.landing .lrow.headrow:hover { background: none; }
+.landing .lname { font-family: var(--display); font-weight: 600; font-size: 1.12rem; }
+.landing .lname a { color: inherit; text-decoration: none; }
+.landing .lname a:hover { text-decoration: underline; text-underline-offset: 0.18em; }
+.landing .lname small { display: block; font-family: var(--text); font-weight: 400; font-size: 0.82rem; color: var(--ink-soft); margin-top: 2px; }
+.landing .mark-out { justify-self: start; display: inline-flex; flex-direction: column; padding: 5px 11px; border: 2px solid currentColor; border-radius: 6px; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.07em; text-transform: uppercase; rotate: -3deg; }
+.landing .mark-out small { font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 0.72rem; }
+.landing .mark-out.returned { color: var(--verm); }
+.landing .mark-out.cleared { color: var(--ink); }
+/* Open, awaiting-settlement and void read as plain text; vermilion is only ever "Returned". */
+.landing .lout { justify-self: start; display: inline-flex; flex-direction: column; font-weight: 600; font-size: 0.9rem; color: var(--ink-2); }
+.landing .lout small { font-weight: 400; font-size: 0.78rem; color: var(--ink-soft); margin-top: 2px; }
+.landing .led-empty { margin-top: 40px; color: var(--ink-soft); font-size: 1.08rem; }
+
+/* The contract's running totals under the table: one quiet ruled list, not cards. */
+.landing .ltotals { margin-top: 30px; display: grid; }
+.landing .ltotals > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px 24px; padding: 12px 4px; border-top: 1px solid var(--rule); font-size: 0.9rem; }
+.landing .ltotals dt { color: var(--ink-2); }
+.landing .ltotals dd { margin: 0; color: var(--ink); font-weight: 600; }
+
+/* The guarantee. */
+.landing .guar { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 80px); }
+.landing .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px; align-content: start; }
+.landing .facts p { margin: 0; padding: 20px 0; border-top: 1px solid var(--rule); line-height: 1.5; color: var(--ink-2); }
+.landing .facts p b { display: block; font-family: var(--display); font-weight: 650; font-size: 1.15rem; color: var(--ink); margin-bottom: 4px; }
+.landing .contract { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; font-size: 0.86rem; color: var(--ink-soft); }
+.landing .contract .mono { color: var(--ink); overflow-wrap: anywhere; }
+
+.landing .closing { text-align: center; padding-block: clamp(96px, 14vw, 180px); }
+.landing .closing h2 { margin-inline: auto; }
+.landing .closing .sub { margin: 0 auto 30px; }
+.landing .closing .other { margin: 8px auto 0; font-size: 0.92rem; }
+.landing .closing .other .btn-plain { padding-block: 6px; }
+.landing .closing .problem { margin: 16px auto 0; }
+
+@media (max-width: 900px) {
+  .landing .hero { display: flex; flex-direction: column; gap: 0; padding-top: clamp(20px, 5vw, 40px); }
+  .landing .copy { display: contents; }
+  .landing h1 { order: 1; }
+  .landing .lede { order: 2; margin-bottom: 8px; }
+  .landing .hero-cheque { order: 4; width: 100%; margin: 0; }
+  .landing .trust { order: 5; }
+  .landing .how, .landing .guar { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .landing .lrow { grid-template-columns: 1fr auto; }
+  .landing .lrow > :nth-child(2), .landing .lrow > :nth-child(3), .landing .lrow > :nth-child(4) { display: none; }
+  .landing .facts { grid-template-columns: minmax(0, 1fr); }
+
+  /* Without the pinned scrub the board shows one finished story: the missed campaign, paid back. */
+  .landing .pledges .p1, .landing .pledges .p2 { display: none; }
+  .landing .bar i { transform: scaleX(0.5); background: var(--verm); }
+  .landing .stamp.returned { opacity: 1; }
+  .landing .steps li { opacity: 1; }
+  .landing .steps li::before { background: var(--ink); color: var(--sheet); box-shadow: none; }
+  .landing .steps li.miss::before { background: var(--verm); }
+}
+
+@media (max-width: 480px) {
+  .landing .pots { grid-template-columns: 1fr; }
+}
+
+/* No motion: the board shows the same finished missed story, with no script at all. */
+@media (prefers-reduced-motion: reduce) {
+  .landing .pledges .p1, .landing .pledges .p2 { display: none; }
+  .landing .bar i { transform: scaleX(0.5); background: var(--verm); }
+  .landing .stamp.returned { opacity: 1; }
+  .landing .steps li { opacity: 1; }
+  .landing .steps li::before { background: var(--ink); color: var(--sheet); box-shadow: none; }
+  .landing .steps li.miss::before { background: var(--verm); }
+}

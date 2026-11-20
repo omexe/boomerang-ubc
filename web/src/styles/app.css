@@ -1,0 +1,686 @@
+/* The working pages, in the one world: security paper, green ink. Vermilion means only "it came
+   back" — the Returned stamp, money owed or come back to a backer, and errors. Tokens, the base,
+   the bar, buttons, notices and the footer live in world.css; every colour, face and curve here
+   comes from its variables. Contrast on this ground: --ink (#12392c) and --ink-2 (#2f5546) on
+   --paper (#edf2ea) or --sheet (#f6f9f3) clear 7:1; --ink-soft (#557366) on --paper is ~4.6:1, the
+   floor for small text, so secondary text never goes lighter; --verm (#b8352a) on --paper is ~5.2:1. */
+
+/* ── Shared sheet shadow, reused by the chart, the voucher and the command block. ── */
+
+.camp-chart,
+.campaign .voucher,
+.proof pre {
+  background: var(--sheet);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(18, 57, 44, 0.06), 0 30px 60px -36px rgba(18, 57, 44, 0.5);
+}
+
+/* ── Page headings: one scale, sentence case, no kicker. ── */
+
+.campaign h1,
+.mine h1,
+.proof h1,
+.lost h1 {
+  font-family: var(--display);
+  font-variation-settings: "opsz" 120, "SOFT" 30;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-size: clamp(2rem, 1.3rem + 2.6vw, 3.6rem);
+  text-wrap: balance;
+}
+
+/* Section heading: like the mockup's step headings, with more room above than below. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.section > h2 {
+  font-family: var(--display);
+  font-weight: 650;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin-top: clamp(14px, 2.4vw, 24px);
+}
+
+/* ── Ruled rows: labels and terms are not cards, they are hairlines on the paper. ── */
+
+.rows {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1.5px solid var(--ink);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 20px;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--rule);
+}
+.row dt {
+  color: var(--ink-soft);
+}
+.row dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
+}
+/* The only linked values the rows carry are addresses and hashes: set them in the code face. */
+.row dd a {
+  font-family: var(--code);
+  font-size: 0.92em;
+}
+.row-long dd {
+  flex-basis: 100%;
+  text-align: left;
+  max-width: 62ch;
+}
+
+/* ── The feed: ruled rows, the time and explorer link kept quiet. ── */
+
+.feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1.5px solid var(--ink);
+}
+.feed li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--rule);
+}
+.feed-text {
+  flex: 1 1 14rem;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.feed-early {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-2);
+  padding: 2px 8px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--guil);
+}
+.feed-when,
+.feed-link {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The steps of a send, under its button. ── */
+
+.send-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+/* The step being taken reads in ink; the ones behind it step back. */
+.send-status p {
+  animation: cq-rise 160ms var(--ease) both;
+}
+.send-status p:not(:last-child):not(.problem) {
+  color: var(--ink-soft);
+}
+
+/* ══ Campaign page ══ */
+
+.campaign {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 3vw, 32px);
+}
+.back {
+  color: var(--ink-soft);
+  font-weight: 500;
+  text-decoration: none;
+}
+.camp-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.camp-head .by {
+  color: var(--ink-soft);
+}
+.camp-head .about {
+  color: var(--ink-2);
+  max-width: 65ch;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+.campaign .tag {
+  align-self: flex-start;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-top: 4px;
+}
+
+/* Body: figures and chart on the left, the cheque or voucher sticky on the right. */
+.camp-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, clamp(300px, 34%, 420px));
+  gap: clamp(24px, 3.5vw, 48px);
+  align-items: start;
+}
+.camp-main {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2.5vw, 28px);
+  min-width: 0;
+}
+.camp-side {
+  position: sticky;
+  top: 88px;
+  min-width: 0;
+}
+.camp-chart {
+  padding: clamp(18px, 2.2vw, 28px);
+  min-width: 0;
+}
+
+/* The figures strip: plates on the paper, parted by 1px hairlines, no box. */
+.figs {
+  display: flex;
+  min-width: 0;
+}
+.figs .plate {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 20px 4px;
+}
+.figs .plate:first-child {
+  padding-left: 0;
+}
+.figs .plate + .plate {
+  border-left: 1px solid var(--rule);
+}
+.campaign .caption {
+  font-family: var(--text);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.campaign .reading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.campaign .figure {
+  font-family: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.3rem);
+  line-height: 1.05;
+  display: inline-flex;
+  flex-direction: row;
+  white-space: nowrap;
+}
+.campaign .plate-togo .figure {
+  font-size: clamp(2rem, 1.4rem + 2.2vw, 3rem);
+}
+.campaign .unit {
+  font-family: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+.campaign .cell {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  white-space: pre;
+}
+.campaign .cell .ghost {
+  position: absolute;
+  inset: 0;
+}
+
+/* The voucher: the settled campaign's sheet, with its stamp. */
+.campaign .voucher {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(20px, 2.4vw, 30px);
+}
+.campaign .voucher-status {
+  font-family: var(--display);
+  font-weight: 650;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.campaign .voucher-figure {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+.campaign .voucher-promise {
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+/* What a settled campaign still owes: a line and the button that sends it, one under another. */
+.campaign .dues {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+.campaign .dues ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.campaign .dues li {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.campaign .dues li > p:first-child {
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.campaign .dues > .btn {
+  justify-self: start;
+}
+.campaign .settle {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+
+/* The backer's own ending, at the head of the voucher: My money's sentence, set as a figure.
+   Vermilion only when the money came back. It rises once the stamp is down. */
+.campaign .voucher-mine {
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 1.3rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  text-wrap: balance;
+  animation: voucher-rise 420ms var(--ease) 260ms both;
+}
+.campaign .voucher-mine.came-back {
+  color: var(--verm);
+}
+.campaign .voucher-mine .caption {
+  letter-spacing: 0;
+}
+/* The stamp comes down on the sheet once, when the outcome is first shown. */
+.campaign .voucher .stamp {
+  transform-origin: 30% 60%;
+  animation: stamp-land 360ms var(--ease) both;
+}
+@keyframes stamp-land {
+  from {
+    opacity: 0;
+    scale: 1.45;
+    rotate: -11deg;
+    filter: blur(3px);
+  }
+}
+@keyframes voucher-rise {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+/* The outcome stamp: cleared in ink, returned in vermilion, never opened in ink-soft. */
+.campaign .stamp {
+  align-self: flex-start;
+  display: inline-flex;
+  padding: 7px 14px;
+  border: 2.5px solid currentColor;
+  border-radius: 7px;
+  font-family: var(--text);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  rotate: -4deg;
+  mix-blend-mode: multiply;
+}
+.campaign .stamp-reached {
+  color: var(--ink);
+}
+.campaign .stamp-short {
+  color: var(--verm);
+}
+.campaign .stamp-void {
+  color: var(--ink-soft);
+}
+
+/* The rule sentence, while the campaign takes pledges. */
+.campaign .promise {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.5rem);
+  line-height: 1.4;
+  color: var(--ink-2);
+  max-width: 46ch;
+}
+
+/* Under the body: what has happened, and the terms. */
+.under {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: start;
+  margin-top: clamp(8px, 2vw, 20px);
+}
+.campaign .control {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-width: 65ch;
+}
+
+/* The chart, drawn on the sheet. Lines differ by colour, dash and weight; lettering is quiet. */
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 16px;
+}
+.chart-raised {
+  font-weight: 600;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.chart-backers {
+  color: var(--ink-soft);
+}
+.chart-frame {
+  width: 100%;
+  flex: 1 1 auto;
+  position: relative;
+  min-height: 230px;
+}
+.chart-svg {
+  position: absolute;
+  inset: 0;
+}
+.chart svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.chart-why {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+.campaign .c-band {
+  fill: color-mix(in srgb, var(--guil) 38%, transparent);
+}
+.campaign .c-band-label,
+.campaign .c-label {
+  font: 500 12px var(--text);
+  fill: var(--ink-soft);
+}
+.campaign .c-axis {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+.campaign .c-target {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  fill: none;
+}
+.campaign .c-pace {
+  stroke: var(--ink-soft);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  fill: none;
+}
+.campaign .c-climb {
+  stroke: var(--ink);
+  stroke-width: 2;
+  fill: none;
+  stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+}
+.campaign .c-newest {
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+.campaign .c-now {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+.campaign .c-dot {
+  fill: var(--ink);
+  stroke: var(--sheet);
+  stroke-width: 2;
+}
+.campaign .c-tick {
+  font: 500 12px var(--text);
+  fill: var(--ink-soft);
+}
+
+/* ══ My money ══ */
+
+.mine {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 56rem;
+}
+.mine-account {
+  color: var(--ink-2);
+}
+.mine-empty {
+  line-height: 1.5;
+}
+.mine .pledges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1.5px solid var(--ink);
+}
+.pledge-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 2px;
+  border-bottom: 1px solid var(--rule);
+}
+.pledge-row > a {
+  width: fit-content;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pledge-row > a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.22em;
+  }
+}
+.pledge-line {
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+/* Money owed back or come back is the one thing vermilion marks here, on the figure line only. */
+.pledge-row.kind-owed .pledge-line,
+.pledge-row.kind-returned .pledge-line {
+  color: var(--verm);
+  font-variant-numeric: tabular-nums;
+}
+.pledge-pay {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 4px;
+}
+
+/* ══ Proof ══ */
+
+.proof {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 56rem;
+}
+.proof .verdict {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.proof .verdict-short,
+.proof .verdict-differs,
+.proof .verdict-ahead {
+  color: var(--verm);
+}
+.proof .verdict-unread,
+.proof .verdict-behind,
+.proof .verdict-down {
+  color: var(--ink-soft);
+}
+.proof .vmark {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  align-self: center;
+}
+.proof .differences,
+.proof .limits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1.5px solid var(--ink);
+}
+.proof .differences li,
+.proof .limits li {
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--rule);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.proof .proof-line {
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.proof pre {
+  margin: 0;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: var(--code);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+/* ══ Not found ══ */
+
+.lost {
+  max-width: 60ch;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lost p {
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+/* ══ Narrow: one column; the cheque or voucher comes first, then the figures and chart. ══ */
+
+@media (max-width: 900px) {
+  .camp-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .camp-side {
+    position: static;
+    order: -1;
+  }
+  .under {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(28px, 6vw, 40px);
+  }
+  /* The first figure takes the full width; the other two share the row below it. */
+  .figs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .figs .plate {
+    padding: 12px 0 0;
+  }
+  .figs .plate + .plate {
+    border-left: 0;
+  }
+  .figs .plate:first-child {
+    grid-column: 1 / -1;
+    padding: 0 0 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .figs .plate:nth-child(3) {
+    padding-left: 20px;
+    border-left: 1px solid var(--rule);
+  }
+  .chart-frame {
+    min-height: 190px;
+  }
+}
+
+/* On a phone a label and its value stack and read from the left: a long value set flush right
+   wraps into a ragged block. */
+@media (max-width: 600px) {
+  .row {
+    flex-direction: column;
+  }
+  .row dd {
+    text-align: left;
+  }
+}

@@ -1,0 +1,53 @@
+/* The cheque: the pledge form, on the landing page and on a campaign's own page. A sheet of
+   security paper with engraved waves behind it. The handwriting (Fraunces italic) is the cheque's
+   printed wording; what the visitor fills in is set upright in the text face, on a ruled line. */
+.cheque { position: relative; width: 100%; max-width: 560px; background: var(--sheet); border-radius: 10px; padding: 24px 26px 22px; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(18, 57, 44, 0.06), 0 1px 2px rgba(18, 57, 44, 0.06), 0 24px 48px -30px rgba(18, 57, 44, 0.5); }
+.cheque > svg.waves { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.65; }
+.cheque > * { position: relative; }
+
+.cq-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 14px; }
+.cq-head b { color: var(--ink); font-weight: 600; }
+.cq-head a { text-decoration-color: color-mix(in srgb, currentColor 30%, transparent); }
+
+.cq-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin: 12px 0 0; font-family: var(--display); font-style: italic; font-size: 1.06rem; color: var(--ink-soft); }
+.fill { flex: 1; min-width: 0; border: 0; border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 75%, transparent); background: transparent; font-family: var(--text); font-style: normal; font-weight: 600; font-size: 1.08rem; color: var(--ink); padding: 4px 2px 5px; border-radius: 0; transition: border-color 200ms var(--ease); }
+.fill:focus { outline: none; border-bottom-color: var(--verm); }
+.fill:focus-visible { outline: none; }
+select.fill { appearance: none; cursor: pointer; padding-right: 22px; background: linear-gradient(45deg, transparent 50%, var(--ink) 50%) right 9px center / 6px 6px no-repeat, linear-gradient(-45deg, transparent 50%, var(--ink) 50%) right 4px center / 6px 6px no-repeat; }
+.fill.payee { overflow-wrap: anywhere; }
+.fill.payee.blank { min-height: 1.9em; border-bottom-style: dashed; border-bottom-color: var(--guil); }
+.fill.amt { flex: 0 0 6.5ch; font-size: 1.55rem; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* The signing line: what comes back, beside the one button that sends it. */
+.cq-sign { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--guil); }
+.ifmiss { flex: 1 1 14em; min-width: 0; font-size: 0.92rem; color: var(--ink-soft); line-height: 1.35; }
+.ifmiss b { display: block; font-weight: 600; font-size: 1.3rem; color: var(--verm); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.ifmiss b.fresh { animation: cq-rise 160ms var(--ease) both; }
+.ifmiss .cq-back { display: block; font-size: 0.84rem; color: var(--ink-2); }
+.ifmiss .cq-met { display: block; margin-top: 6px; font-size: 0.84rem; }
+select.fill:disabled { opacity: 0.6; cursor: not-allowed; }
+.ifmiss .cq-line { display: block; color: var(--ink-2); max-width: 34em; }
+@keyframes cq-rise { from { opacity: 0; transform: translateY(4px); } }
+
+/* Under the signing line: what stands in the way, where the figure came from, what a send is doing. */
+.cq-notes { display: grid; gap: 8px; margin-top: 14px; font-size: 0.88rem; line-height: 1.45; color: var(--ink-2); }
+.cq-notes:empty { display: none; }
+.cq-notes .quiet { font-size: 0.84rem; }
+.cq-blocks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.cq-notes .send-status { display: grid; gap: 4px; }
+/* What stands in the way of the button is said in ink, above the fine print; so is a pledge that is in. */
+.cq-blocks li, .cq-notes .cq-sent { color: var(--ink); font-weight: 600; }
+.cq-desk { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 6px; padding-top: 12px; border-top: 1px dashed var(--guil); }
+/* The blank cheque's two offers: the two-minute campaign, and the ten-minute one under it. */
+.cq-starts { display: grid; gap: 2px; justify-items: end; }
+.cq-starts .btn-plain { font-size: 0.88rem; padding-block: 6px; }
+.cq-desk .quiet { flex: 1 1 16em; }
+.cq-desk > p[role="status"] { flex-basis: 100%; }
+
+@media (max-width: 480px) {
+  .cheque { padding: 20px 18px 18px; }
+  select.fill { flex-basis: 100%; }
+  .cq-sign .btn { width: 100%; }
+  .cq-starts { width: 100%; justify-items: stretch; }
+}

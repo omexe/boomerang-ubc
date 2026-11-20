@@ -1,0 +1,112 @@
+/* Proof: the checks that run in this browser, and the table of every campaign. Tokens from world.css only. */
+
+.proof .checks-run {
+  align-self: flex-start;
+  margin: 8px 0 2px;
+}
+
+/* The check results are ruled rows on the paper, like the rest of Proof: an ink rule on top, a
+   hairline between each. The claim sits on a verdict line (styled in app.css); its detail, which
+   can carry a long hash, wraps underneath, lined up past the mark. */
+.proof .checks-rows {
+  margin: 10px 0 2px;
+  border-top: 1.5px solid var(--ink);
+}
+.proof .check-row {
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--rule);
+}
+.proof .check-row .verdict {
+  margin: 0;
+}
+.proof .check-detail {
+  margin: 5px 0 0;
+  padding-left: 25px;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.proof .checks-verdict {
+  margin: 12px 0 2px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+/* Every campaign and how it ended: a real table, ruled like the rows above it, the name a link,
+   the figures in tabular numerals. */
+.proof .checks-campaigns {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.proof .checks-campaigns th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--ink-soft);
+  padding: 10px 14px 10px 0;
+  border-bottom: 1.5px solid var(--ink);
+}
+.proof .checks-campaigns td {
+  text-align: left;
+  padding: 13px 14px 13px 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: baseline;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.proof .checks-campaigns td a {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+}
+@media (hover: hover) and (pointer: fine) {
+  .proof .checks-campaigns td a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+}
+
+/* Narrow: no sideways scroll. The head goes to screen readers only, and each row stacks to two
+   lines: the campaign's name across the top, then its three figures beneath, each under its own
+   column label. */
+@media (max-width: 560px) {
+  .proof .checks-campaigns thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .proof .checks-campaigns tbody {
+    display: block;
+    border-top: 1.5px solid var(--ink);
+  }
+  .proof .checks-campaigns tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px 14px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .proof .checks-campaigns td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+  .proof .checks-campaigns td[data-label="Campaign"] {
+    grid-column: 1 / -1;
+    font-size: 1.05rem;
+  }
+  .proof .checks-campaigns td:not([data-label="Campaign"])::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+  }
+}

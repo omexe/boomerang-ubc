@@ -1,0 +1,114 @@
+/* One world: security paper. Green ink does the reading; vermilion means only "it came back".
+   This file holds what every page shares: tokens, the base, the bar at the top, buttons, the
+   notices under the bar and the footer. Pages add their own sheets (landing.css, cheque.css,
+   scene.css, app.css) and take every colour, curve and gutter from here. */
+:root {
+  --paper: #edf2ea;
+  --sheet: #f6f9f3;
+  --guil: #b7ccb4;
+  --rule: #cfdccb;
+  --ink: #12392c;
+  --ink-2: #2f5546;
+  --ink-soft: #557366;
+  --verm: #b8352a;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: clamp(18px, 4vw, 44px);
+  --display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
+  --text: "Geist Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --code: "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--paper); scrollbar-color: var(--guil) var(--paper); }
+html, body { overflow-x: clip; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+body { margin: 0; font-family: var(--text); font-size: 16px; line-height: 1.5; color: var(--ink); background: var(--paper); -webkit-font-smoothing: antialiased; caret-color: var(--verm); }
+::selection { background: var(--ink); color: var(--sheet); }
+:focus-visible { outline: 2px solid var(--verm); outline-offset: 3px; border-radius: 3px; }
+a { color: inherit; text-underline-offset: 0.22em; text-decoration-thickness: 1px; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); transition: text-decoration-color 200ms var(--ease); }
+a:hover { text-decoration-color: currentColor; }
+button, input, select { font: inherit; color: inherit; }
+h1, h2, h3, h4, p { margin: 0; }
+
+.wrap { max-width: 1280px; margin: 0 auto; padding-inline: var(--gutter); }
+.tab { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--code); font-size: 0.9em; }
+.quiet { color: var(--ink-soft); font-size: 0.92rem; }
+.problem { color: var(--verm); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* Buttons. Ink is the one action on a screen; line is everything else. */
+.btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-family: var(--text); font-weight: 600; font-size: 0.98rem; line-height: 1.2; border: 0; cursor: pointer; border-radius: 6px; padding: 13px 20px; text-decoration: none; transition: transform 140ms var(--ease), background-color 240ms var(--ease), box-shadow 240ms var(--ease), opacity 240ms var(--ease); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { cursor: not-allowed; opacity: 0.45; transform: none; }
+.btn-ink { background: var(--ink); color: var(--sheet); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 8px 18px -10px rgba(18, 57, 44, 0.7); }
+.btn-ink .arrow { transition: transform 240ms var(--ease); }
+.btn-line { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink) 70%, transparent); padding: 10px 16px; }
+.btn-plain { background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink-2); text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-ink:not(:disabled):hover { background: #1a4a39; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 12px 22px -10px rgba(18, 57, 44, 0.75); }
+  .btn-ink:not(:disabled):hover .arrow { transform: translateX(3px); }
+  .btn-line:not(:disabled):hover { box-shadow: inset 0 0 0 1.5px var(--ink); }
+}
+
+/* The bar: quiet, so a page's own headline is the first thing read. */
+nav.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; backdrop-filter: saturate(1.2) blur(10px); background: color-mix(in srgb, var(--paper) 82%, transparent); border-bottom: 1px solid transparent; transition: border-color 300ms var(--ease); }
+nav.top.scrolled { border-bottom-color: var(--rule); }
+/* Nothing in the bar breaks inside itself; when it runs out of room the wallet drops to a row of its own. */
+nav.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 30px; min-height: 64px; }
+.mark { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-variation-settings: "opsz" 72, "SOFT" 0; font-weight: 700; font-size: 1.32rem; letter-spacing: -0.01em; text-decoration: none; }
+.mark svg { width: 26px; height: 26px; }
+.links { display: flex; gap: 24px; font-size: 0.95rem; white-space: nowrap; }
+.links a { text-decoration: none; color: var(--ink-soft); padding-block: 6px; transition: color 200ms var(--ease); }
+.links a:hover, .links a[aria-current="page"] { color: var(--ink); }
+.links a[aria-current="page"] { box-shadow: 0 1.5px 0 var(--ink); }
+.wallet { margin-left: auto; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+.wallet-account { font-family: var(--code); font-size: 0.84rem; color: var(--ink-2); padding: 6px 11px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--rule); background: color-mix(in srgb, var(--sheet) 80%, transparent); }
+
+/* Notices under the bar: a missing wallet, a wallet error, a chain that cannot be read. */
+.notices { display: grid; gap: 8px; padding-block: 10px 0; font-size: 0.92rem; }
+.notices:empty { display: none; }
+.notices p { max-width: 70ch; color: var(--ink-2); }
+.notices .problem, .banner { color: var(--verm); }
+.banner { padding: 12px 16px; border-radius: 8px; background: color-mix(in srgb, var(--verm) 8%, var(--sheet)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--verm) 35%, transparent); }
+
+/* Choosing between wallets: a short list on the sheet, not a dialog over the page. */
+.chooser { justify-self: end; width: min(100%, 340px); padding: 16px; border-radius: 10px; background: var(--sheet); box-shadow: 0 1px 2px rgba(18, 57, 44, 0.06), 0 24px 48px -30px rgba(18, 57, 44, 0.5); }
+.chooser p { font-weight: 600; margin-bottom: 10px; }
+.chooser ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+.chooser li button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0; border-radius: 6px; background: var(--paper); cursor: pointer; font-weight: 500; text-align: left; transition: background-color 200ms var(--ease); }
+.chooser li button:hover { background: var(--rule); }
+
+/* A page that is not the landing page sits in the gutter with room above it. */
+main.page { padding-block: clamp(28px, 5vw, 56px) clamp(64px, 9vw, 120px); min-height: 60svh; }
+
+footer.foot { border-top: 1px solid var(--rule); padding-block: 28px 40px; font-size: 0.84rem; color: var(--ink-soft); line-height: 1.55; }
+footer.foot .wrap { display: grid; grid-template-columns: 1fr auto; gap: 18px 40px; }
+footer.foot .fl { display: flex; flex-wrap: wrap; gap: 6px 20px; align-content: start; }
+.disclaimer { max-width: 62em; }
+.as-of { font-variant-numeric: tabular-nums; margin-top: 6px; }
+
+/* A page that could not start (a bad setting): plain, and it names the problem. */
+.stopped { max-width: 60ch; margin: 0 auto; padding: clamp(48px, 12vh, 140px) var(--gutter); display: grid; gap: 14px; }
+.stopped h1 { font-family: var(--display); font-weight: 600; font-size: clamp(2rem, 1.3rem + 2.6vw, 3.2rem); letter-spacing: -0.03em; line-height: 1.02; }
+
+/* Under 900px the bar is two or three rows: it stays at the top of the page and does not follow the scroll. */
+@media (max-width: 900px) {
+  nav.top { position: static; backdrop-filter: none; background: var(--paper); }
+  nav.top .wrap { gap: 6px 18px; padding-block: 10px; }
+  .links { order: 3; width: 100%; gap: 20px; overflow-x: auto; }
+  footer.foot .wrap { grid-template-columns: 1fr; }
+}
+/* A phone is narrower than the wallet's two parts side by side: there they may break. */
+@media (max-width: 600px) {
+  .wallet { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* The offer of a practice wallet: a line button and what it is, wherever a page would otherwise only say "connect a wallet". */
+.practice { display: grid; gap: 8px; justify-items: start; }
+.practice .quiet { max-width: 46ch; }
