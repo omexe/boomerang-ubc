@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import SceneMount from "@/components/home/SceneMount";
 import ScrollDriver from "@/components/home/ScrollDriver";
+import HeaderFade from "@/components/home/HeaderFade";
 import CampaignHud from "@/components/home/CampaignHud";
 import { CountUp, LineReveal } from "@/components/home/Reveal";
 import { demoCampaign } from "@/lib/story";
@@ -26,8 +27,11 @@ function Section({
       id={id}
       data-story={i}
       className={`relative flex items-center px-6 md:px-[7vw] ${hero ? "min-h-screen pb-[14vh]" : "min-h-[110vh]"}`}
+      style={hero ? { scrollSnapAlign: "start" } : undefined}
     >
-      <div className={`w-full ${wide ? "max-w-[680px]" : "max-w-[520px]"}`}>{children}</div>
+      <div data-fade className={`w-full ${wide ? "max-w-[680px]" : "max-w-[520px]"}`} style={{ scrollSnapAlign: hero ? "none" : "center" }}>
+        {children}
+      </div>
     </section>
   );
 }
@@ -77,25 +81,19 @@ export default function Home() {
     <main className="relative">
       <SceneMount />
       <ScrollDriver />
+      <HeaderFade />
       <CampaignHud />
-
-      {/* text scrolls under this band and fades out before it reaches the header */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 z-20 h-[118px]"
-        style={{ background: "linear-gradient(to bottom, #1d1d1d 0%, #1d1d1d 52%, rgba(29,29,29,0) 100%)" }}
-      />
 
       {/* header */}
       <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between px-6 py-5 md:px-[7vw]">
         <Link href="/" className="flex items-center gap-3">
           <Image src="/logo-mark.png" alt="" width={34} height={34} priority />
-          <span className="font-serif text-[22px] leading-none text-paper">Boomerang</span>
+          <span className="font-serif text-[22px] leading-none text-paper [text-shadow:0_1px_10px_rgba(0,0,0,0.75)]">Boomerang</span>
         </Link>
-        <nav className="flex items-center gap-8 text-[14px] text-paper">
+        <nav className="flex items-center gap-8 text-[14px] text-paper [text-shadow:0_1px_10px_rgba(0,0,0,0.75)]">
           <a href="#how" className="hidden hover:text-glow md:inline">How it works</a>
           <a href="#why" className="hidden hover:text-glow md:inline">Why now</a>
-          <Link href="/login" className="rounded-[5px] border border-line px-4 py-2 hover:border-paper">
+          <Link href="/login" className="rounded-[5px] border border-line bg-charcoal/70 px-4 py-2 backdrop-blur-sm hover:border-paper">
             Log in
           </Link>
         </nav>

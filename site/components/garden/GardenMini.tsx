@@ -5,7 +5,9 @@
 // sprite, late ones the faded one; on a miss the early ones carry a bonus token, on success they hop.
 
 import { useEffect, useRef } from "react";
+import { DOORS, doorGlow, maybeEnter, newVisit, stepVisit } from "./doors";
 import { BODY, G_H, G_W, GARDENERS, gardenersFor, IMG_H, IMG_W, LEG_L, LEG_R, NEIGHBOURS, NODES, STRIDE, U } from "./garden";
+import { fitPixels } from "./pixels";
 
 type Parts = { el: HTMLDivElement | null; rig: HTMLDivElement | null; body: HTMLDivElement | null; legL: HTMLDivElement | null; legR: HTMLDivElement | null; tok: HTMLDivElement | null };
 
@@ -20,6 +22,8 @@ export type GardenState = {
 export function GardenMini({ state }: { state: GardenState }) {
   const box = useRef<HTMLDivElement>(null);
   const world = useRef<HTMLDivElement>(null);
+  const art = useRef<HTMLImageElement>(null);
+  const glows = useRef<(HTMLDivElement | null)[]>([]);
   const parts = useRef<Parts[]>(Array.from({ length: GARDENERS }, () => ({ el: null, rig: null, body: null, legL: null, legR: null, tok: null })));
   const live = useRef(state);
   live.current = state;
@@ -30,8 +34,13 @@ export function GardenMini({ state }: { state: GardenState }) {
   useEffect(() => {
     const el = box.current;
     if (!el) return;
+    // whole device pixels per island pixel when zoomed in enough to see them; smooth otherwise
     const fit = () => {
-      if (world.current) world.current.style.transform = `scale(${el.clientWidth / IMG_W})`;
+      const f = fitPixels(el.clientWidth / IMG_W, window.devicePixelRatio || 1);
+      const dx = (el.clientWidth - IMG_W * f.scale) / 2;
+      const dy = (el.clientHeight - IMG_H * f.scale) / 2;
+      if (world.current) world.current.style.transform = `translate(${f.snap(dx)}px, ${f.snap(dy)}px) scale(${f.scale})`;
+      if (art.current) art.current.style.imageRendering = f.pixelated ? "pixelated" : "auto";
     };
     fit();
     const ro = new ResizeObserver(fit);
@@ -47,7 +56,7 @@ export function GardenMini({ state }: { state: GardenState }) {
     };
     const gs = parts.current.map((p) => {
       const n = Math.floor(rand() * NODES.length);
-      return { ...p, x: NODES[n][0], y: NODES[n][1], at: n, to: n, tx: NODES[n][0], ty: NODES[n][1], wait: rand() * 2, speed: 11 + rand() * 5, face: 1, shown: 0, token: 0, phase: 0 };
+      return { ...p, x: NODES[n][0], y: NODES[n][1], at: n, to: n, tx: NODES[n][0], ty: NODES[n][1], wait: rand() * 2, speed: 11 + rand() * 5, face: 1, shown: 0, token: 0, phase: 0, visit: newVisit() };
     });
     let raf = 0;
     let last = performance.now();
@@ -63,17 +72,20 @@ export function GardenMini({ state }: { state: GardenState }) {
         const dx = g.tx - g.x;
         const dy = g.ty - g.y;
         const d = Math.hypot(dx, dy);
+        const door = stepVisit(g, g.visit, dt, d <= 0.8, rand);
         let moving = false;
-        if (d > 0.8) {
+        if (d > 0.8 && (!door.busy || g.visit.stage === "walk")) {
           const step = Math.min(d, g.speed * dt * Math.min(1, d / 6 + 0.35));
           g.x += (dx / d) * step;
           g.y += (dy / d) * step;
           g.phase += (step / STRIDE) * Math.PI;
           if (Math.abs(dx) / d > 0.35) g.face = dx > 0 ? -1 : 1;
           moving = true;
-        } else {
+        } else if (!door.busy) {
           g.wait -= dt;
-          if (g.wait <= 0) {
+          if (g.wait <= 0 && maybeEnter(g, g.visit, rand)) {
+            g.wait = 0;
+          } else if (g.wait <= 0) {
             const here = g.to;
             let options = NEIGHBOURS[here].filter((k) => k !== g.at);
             if (!options.length) options = NEIGHBOURS[here];
@@ -99,10 +111,10 @@ export function GardenMini({ state }: { state: GardenState }) {
         const cheer = s.outcome === "met" && i < n ? Math.round(Math.max(0, Math.sin(t * 4 + i * 1.7)) * 4) * U : 0;
         if (g.el) {
           g.el.style.transform = `translate3d(${(g.x - G_W / 2).toFixed(2)}px, ${(g.y - G_H - cheer).toFixed(2)}px, 0)`;
-          g.el.style.opacity = g.shown.toFixed(3);
+          g.el.style.opacity = (g.shown * door.show).toFixed(3);
           g.el.style.zIndex = String(Math.round(g.y));
         }
-        if (g.rig) g.rig.style.transform = `scaleX(${g.face})`;
+        if (g.rig) g.rig.style.transform = `scaleX(${g.face}) scale(${(0.82 + 0.18 * door.show).toFixed(3)})`;
         if (g.body) g.body.style.transform = `translate3d(0, ${(-bob).toFixed(2)}px, 0)`;
         if (g.legL) g.legL.style.transform = `translate3d(${swing.toFixed(2)}px, ${(-liftL).toFixed(2)}px, 0)`;
         if (g.legR) g.legR.style.transform = `translate3d(${(-swing).toFixed(2)}px, ${(-liftR).toFixed(2)}px, 0)`;
@@ -110,6 +122,11 @@ export function GardenMini({ state }: { state: GardenState }) {
           g.tok.style.opacity = g.token.toFixed(3);
           g.tok.style.transform = `translate3d(-50%, ${(-6 - (1 - g.token) * 20 + Math.sin(t * 2 + i) * 1.2).toFixed(2)}px, 0)`;
         }
+      });
+      const glow = doorGlow(gs.map((g) => g.visit));
+      DOORS.forEach((dr, k) => {
+        const el = glows.current[k];
+        if (el) el.style.opacity = (glow.get(dr.id) ?? 0).toFixed(3);
       });
       raf = requestAnimationFrame(tick);
     };
@@ -121,11 +138,14 @@ export function GardenMini({ state }: { state: GardenState }) {
     <div ref={box} className="relative w-full overflow-hidden" style={{ aspectRatio: `${IMG_W} / ${IMG_H}` }} aria-hidden>
       <div ref={world} className="absolute left-0 top-0 origin-top-left" style={{ width: IMG_W, height: IMG_H }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/island.png" alt="" draggable={false} className="pixelated absolute left-0 top-0" style={{ width: IMG_W, height: IMG_H }} />
+        <img ref={art} src="/island.png" alt="" draggable={false} className="absolute left-0 top-0" style={{ width: IMG_W, height: IMG_H }} />
+        {DOORS.map((dr, k) => (
+          <div key={dr.id} ref={(el) => { glows.current[k] = el; }} className="pointer-events-none absolute" style={{ left: dr.at[0] - 9, top: dr.at[1] - 24, width: 18, height: 26, opacity: 0, zIndex: dr.at[1] - 2, background: "radial-gradient(ellipse at 50% 70%, rgba(255,214,130,0.85), rgba(255,214,130,0) 70%)", mixBlendMode: "screen" }} />
+        ))}
         {Array.from({ length: GARDENERS }, (_, i) => (
           <div key={i} ref={(el) => { parts.current[i].el = el; }} className="absolute left-0 top-0" style={{ width: G_W, height: G_H, opacity: 0 }}>
             <div className="absolute left-1/2 rounded-[50%]" style={{ bottom: -2, width: G_W * 0.7, height: 5, marginLeft: -G_W * 0.35, background: "rgba(40,30,15,0.35)" }} />
-            <div ref={(el) => { parts.current[i].rig = el; }} className="absolute inset-0">
+            <div ref={(el) => { parts.current[i].rig = el; }} className="absolute inset-0 origin-bottom">
               {([
                 { r: BODY, key: "body" },
                 { r: LEG_L, key: "legL" },
