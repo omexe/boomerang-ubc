@@ -38,7 +38,10 @@ export default function CampaignHud() {
         const st = STATUS[c.status];
         if (status.current) status.current.textContent = st.label;
         if (dot.current) dot.current.style.background = st.color;
-        if (note.current) note.current.textContent = story.note;
+        if (note.current) {
+          note.current.textContent = story.note;
+          note.current.style.display = story.note ? "" : "none";
+        }
         if (bar.current) bar.current.style.background = c.status === "met" ? "var(--color-met)" : "var(--color-paper)";
       }
       raf = requestAnimationFrame(tick);

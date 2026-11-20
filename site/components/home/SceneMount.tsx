@@ -3,19 +3,20 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 
-// v2 (pixel island) is the default. Add ?scene=v1 to the URL to see the
-// original smooth island, kept for comparison and easy rollback.
+// v3 (the 2D garden image) is the default. Older scenes stay available for
+// comparison and rollback: ?scene=v1 (smooth 3D island), ?scene=v2 (3D pixel island).
+const GardenScene = dynamic(() => import("./IslandScene2D"), { ssr: false, loading: () => null });
 const PixelScene = dynamic(() => import("./IslandScenePixel"), { ssr: false, loading: () => null });
 const SmoothScene = dynamic(() => import("./IslandSceneV1"), { ssr: false, loading: () => null });
 
 export default function SceneMount() {
-  const [v1, setV1] = useState(false);
+  const [scene, setScene] = useState<string | null>(null);
   useEffect(() => {
-    setV1(new URLSearchParams(window.location.search).get("scene") === "v1");
+    setScene(new URLSearchParams(window.location.search).get("scene") ?? "v3");
   }, []);
   return (
     <div className="fixed inset-0 z-0" aria-hidden>
-      {v1 ? <SmoothScene /> : <PixelScene />}
+      {scene === "v1" ? <SmoothScene /> : scene === "v2" ? <PixelScene /> : scene ? <GardenScene /> : null}
       {/* fade the scene into the page */}
       <div
         className="pointer-events-none absolute inset-0"
